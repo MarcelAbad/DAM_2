@@ -19,10 +19,10 @@ import java.util.List;
 /**
  * Catálogo de productos persistido en fichero de texto y en XML.
  * Unidad 1 · Persistencia en ficheros (RA1).
- *
+ * <p>
  * Hay 7 TODO, uno por bloque de teoría. Después de cada bloque completas
  * el TODO que toca, lanzas los tests y escribes tu línea en el cuaderno.
- *
+ * <p>
  * NO cambies las firmas de los métodos (nombre, parámetros, tipo devuelto):
  * los tests dependen de ellas tal cual están.
  */
@@ -41,10 +41,11 @@ public class GestorCatalogo {
     // ═══════════════════════════════════════════════════════════════
     // TODO 1 · Crear la carpeta de datos          (teoría: Path y Files)
     // ═══════════════════════════════════════════════════════════════
+
     /**
      * Crea la carpeta de datos si todavía no existe.
      * Si ya existe, no debe fallar: se puede llamar dos veces seguidas.
-     *
+     * <p>
      * Pista: Files.createDirectories(...)
      */
     public void inicializar() throws IOException {
@@ -56,9 +57,10 @@ public class GestorCatalogo {
     // ═══════════════════════════════════════════════════════════════
     // TODO 2 · Comprobar si los ficheros existen  (teoría: Path y Files)
     // ═══════════════════════════════════════════════════════════════
+
     /**
      * Devuelve true si el fichero de texto existe. No lo crea ni lo toca.
-     *
+     * <p>
      * Pista: Files.exists(...)
      */
     public boolean existeFicheroTexto() {
@@ -82,81 +84,120 @@ public class GestorCatalogo {
     // ═══════════════════════════════════════════════════════════════
     // TODO 3 · Guardar en texto            (teoría: streams de escritura)
     // ═══════════════════════════════════════════════════════════════
+
     /**
      * Guarda la lista de productos en productos.txt, un producto por línea,
      * con el formato "id;nombre;precio", en UTF-8.
-     *
+     * <p>
      * Cada vez que se guarda, el fichero queda solo con estos productos:
      * no se acumulan los de la llamada anterior.
-     *
+     * <p>
      * Pista: Files.newBufferedWriter con StandardOpenOption.CREATE y
      * TRUNCATE_EXISTING, dentro de un try-with-resources. Y newLine().
      */
     public void guardarTexto(List<Producto> productos) throws IOException {
-        throw new UnsupportedOperationException("TODO 3 sin implementar");
+        //throw new UnsupportedOperationException("TODO 3 sin implementar");
+
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                ficheroTexto,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
+
+            for (Producto p : productos) {
+                writer.write(p.getId() + ";" + p.getNombre() + ";" + p.getPrecio());
+                writer.newLine();
+            }
+        }
     }
+
 
     // ═══════════════════════════════════════════════════════════════
     // TODO 4 · Leer de texto                (teoría: streams de lectura)
     // ═══════════════════════════════════════════════════════════════
+
     /**
      * Lee productos.txt y reconstruye la lista de productos.
      * Si el fichero todavía no existe, devuelve una lista vacía
      * (no lanza excepción).
-     *
+     * <p>
      * Pista: Files.readAllLines(...) y String.split(";")
      */
     public List<Producto> cargarTexto() throws IOException {
-        throw new UnsupportedOperationException("TODO 4 sin implementar");
+
+        List<Producto> productos = new ArrayList<>();
+
+        if (!Files.exists(ficheroTexto)) {
+            return productos;
+        }
+
+        List<String> lineas = Files.readAllLines(ficheroTexto, StandardCharsets.UTF_8);
+
+        for (String linea : lineas) {
+            if (linea.isBlank()) {
+                continue;
+            }
+            String[] partes = linea.split(";");
+            int id = Integer.parseInt(partes[0]);
+            String nombre = partes[1];
+            double precio = Double.parseDouble(partes[2]);
+            productos.add(new Producto(id, nombre, precio));
+        }
+
+        return productos;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // TODO 5 · Guardar en XML con JAXB              (teoría: binding XML)
-    // ═══════════════════════════════════════════════════════════════
-    /**
-     * Guarda la lista de productos como productos.xml, usando JAXB
-     * (JAXBContext + Marshaller), envuelta en un Catalogo.
-     *
-     * Pista: JAXBContext.newInstance(Catalogo.class), createMarshaller(),
-     * la propiedad JAXB_FORMATTED_OUTPUT a true, y marshal(...).
-     */
-    public void guardarXmlConJaxb(List<Producto> productos) throws JAXBException {
-        throw new UnsupportedOperationException("TODO 5 sin implementar");
-    }
 
-    // ═══════════════════════════════════════════════════════════════
-    // TODO 6 · Leer XML con un parser DOM           (teoría: parsers XML)
-    // ═══════════════════════════════════════════════════════════════
-    /**
-     * Lee productos.xml con un parser DOM —NO con JAXB— y reconstruye la
-     * lista recorriendo a mano los elementos <producto>.
-     *
-     * Pista: DocumentBuilderFactory.newInstance(), newDocumentBuilder(),
-     * parse(...), getElementsByTagName("producto") y, dentro de cada uno,
-     * getElementsByTagName("id").item(0).getTextContent()
-     *
-     * Nota: al probar el TODO 7 veréis en consola una línea "[Fatal Error] ...".
-     * NO es un fallo vuestro: la imprime el propio parser cuando le llega el XML
-     * roto que el test le pasa a propósito. Si os molesta, se quita con
-     * builder.setErrorHandler(...) — buscad ErrorHandler en la documentación.
-     */
-    public List<Producto> leerXmlConDom() throws Exception {
-        throw new UnsupportedOperationException("TODO 6 sin implementar");
-    }
+// ═══════════════════════════════════════════════════════════════
+// TODO 5 · Guardar en XML con JAXB              (teoría: binding XML)
+// ═══════════════════════════════════════════════════════════════
 
-    // ═══════════════════════════════════════════════════════════════
-    // TODO 7 · Carga robusta                    (teoría: excepciones E/S)
-    // ═══════════════════════════════════════════════════════════════
-    /**
-     * Carga el catálogo de la forma más segura posible:
-     *   1. Si existe el XML, lo intenta leer.
-     *   2. Si el XML no existe o está mal formado, cae en el fichero de texto.
-     *   3. Si tampoco hay texto, devuelve una lista vacía.
-     *
-     * Este método NUNCA lanza una excepción hacia fuera: fíjate en que no
-     * declara "throws". Todo error de E/S se captura aquí dentro.
-     */
-    public List<Producto> cargarCatalogoRobusto() {
-        throw new UnsupportedOperationException("TODO 7 sin implementar");
-    }
+/**
+ * Guarda la lista de productos como productos.xml, usando JAXB
+ * (JAXBContext + Marshaller), envuelta en un Catalogo.
+ * <p>
+ * Pista: JAXBContext.newInstance(Catalogo.class), createMarshaller(),
+ * la propiedad JAXB_FORMATTED_OUTPUT a true, y marshal(...).
+ */
+public void guardarXmlConJaxb(List<Producto> productos) throws JAXBException {
+    throw new UnsupportedOperationException("TODO 5 sin implementar");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TODO 6 · Leer XML con un parser DOM           (teoría: parsers XML)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Lee productos.xml con un parser DOM —NO con JAXB— y reconstruye la
+ * lista recorriendo a mano los elementos <producto>.
+ * <p>
+ * Pista: DocumentBuilderFactory.newInstance(), newDocumentBuilder(),
+ * parse(...), getElementsByTagName("producto") y, dentro de cada uno,
+ * getElementsByTagName("id").item(0).getTextContent()
+ * <p>
+ * Nota: al probar el TODO 7 veréis en consola una línea "[Fatal Error] ...".
+ * NO es un fallo vuestro: la imprime el propio parser cuando le llega el XML
+ * roto que el test le pasa a propósito. Si os molesta, se quita con
+ * builder.setErrorHandler(...) — buscad ErrorHandler en la documentación.
+ */
+public List<Producto> leerXmlConDom() throws Exception {
+    throw new UnsupportedOperationException("TODO 6 sin implementar");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TODO 7 · Carga robusta                    (teoría: excepciones E/S)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Carga el catálogo de la forma más segura posible:
+ * 1. Si existe el XML, lo intenta leer.
+ * 2. Si el XML no existe o está mal formado, cae en el fichero de texto.
+ * 3. Si tampoco hay texto, devuelve una lista vacía.
+ * <p>
+ * Este método NUNCA lanza una excepción hacia fuera: fíjate en que no
+ * declara "throws". Todo error de E/S se captura aquí dentro.
+ */
+public List<Producto> cargarCatalogoRobusto() {
+    throw new UnsupportedOperationException("TODO 7 sin implementar");
+}
 }
