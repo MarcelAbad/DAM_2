@@ -1,3 +1,5 @@
+package Hilos;
+
 public class Ejercicio1B {
 
         static class Contador {
