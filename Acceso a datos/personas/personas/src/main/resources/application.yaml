@@ -1,0 +1,19 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: personas
+
+  datasource:
+    url: jdbc:postgresql://localhost:5676/postgres
+    username: postgres
+    password: secret
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+
+
+# Para conectar: http://localhost:9090/h2-console
