@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marcel Abad | Desarrollador Multiplataforma & Data Analyst</title>
+  <meta name="description" content="Portfolio de Marcel Abad: desarrollo multiplataforma (DAM), backend seguro y análisis de datos." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="spotlight" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a class="logo" href="#inicio">&lt;MA/&gt;</a>
+    <nav>
+      <a href="#sobre-mi">Sobre mí</a>
+      <a href="#habilidades">Habilidades</a>
+      <a href="#proyectos">Proyectos</a>
+      <a href="#formacion">Formación</a>
+      <a href="#github">GitHub</a>
+      <a href="#contacto">Contacto</a>
+      <a class="nav-gh" href="https://github.com/MarcelAbad" target="_blank" rel="noopener">Mi GitHub ↗</a>
+      <button id="theme" aria-label="Cambiar tema">◐</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="inicio" class="hero">
+      <div class="hero-text">
+        <p class="status"><i></i> Disponible para prácticas y proyectos</p>
+        <h1>Hola, soy <span class="grad">Marcel Abad</span></h1>
+        <p class="roles"><span id="typed"></span><b class="caret"></b></p>
+        <p class="lead">Construyo backends seguros y analizo datos para la toma de decisiones estratégicas.</p>
+        <div class="cta">
+          <a class="btn primary" href="#proyectos">Ver proyectos</a>
+          <a class="btn" href="https://github.com/MarcelAbad" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      <div class="code-card" aria-hidden="true">
+        <div class="code-top"><i></i><i></i><i></i><span>marcel.json</span></div>
+<pre><code><b class="k">{</b>
+  <b class="p">"nombre"</b>: <b class="s">"Marcel Abad"</b>,
+  <b class="p">"perfil"</b>: [<b class="s">"DAM"</b>, <b class="s">"Data Analyst"</b>],
+  <b class="p">"stack"</b>: [<b class="s">"Java"</b>, <b class="s">"Python"</b>, <b class="s">"PostgreSQL"</b>],
+  <b class="p">"sistemas"</b>: [<b class="s">"Linux"</b>, <b class="s">"Odoo"</b>],
+  <b class="p">"normativa"</b>: <b class="s">"RGPD"</b>,
+  <b class="p">"enBusquedaDe"</b>: <b class="s">"nuevos retos"</b>
+<b class="k">}</b></code></pre>
+        <div class="float f1"><img alt="" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/java/java-original.svg"></div>
+        <div class="float f2"><img alt="" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/python/python-original.svg"></div>
+        <div class="float f3"><img alt="" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/postgresql/postgresql-original.svg"></div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+
+    <section class="stats reveal">
+      <div><strong data-count="2">0</strong><span>Cursos en paralelo: DAM y Máster</span></div>
+      <div><strong data-count="5">0</strong><span>Tecnologías de uso diario</span></div>
+      <div><strong data-count="1">0</strong><span>App real en desarrollo</span></div>
+      <div><strong>RGPD</strong><span>Datos tratados con cumplimiento</span></div>
+    </section>
+
+    <section id="sobre-mi" class="reveal">
+      <h2>Sobre mí</h2>
+      <div class="about">
+        <div class="prose">
+          <p>Estudio <strong>2º de Desarrollo de Aplicaciones Multiplataforma (DAM)</strong> y un <strong>Máster en Data Analysis</strong>.</p>
+          <p>Actualmente desarrollo el <strong>backend de la app móvil de un club deportivo</strong>: autenticación, gestión de datos corporativos y bases de datos seguras conforme al RGPD.</p>
+          <p>Priorizo soluciones pragmáticas: código estructurado, arquitecturas escalables y procesamiento de datos eficiente. También tengo experiencia administrando sistemas Linux (RAID), desplegando Odoo y automatizando tareas.</p>
+        </div>
+        <ul class="facts">
+          <li><b>Estudios</b> 2º DAM + Máster Data Analysis</li>
+          <li><b>Enfoque</b> Backend y datos</li>
+          <li><b>Idiomas</b> Español · Inglés (edita este dato)</li>
+          <li><b>Ubicación</b> España (edita este dato)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="habilidades" class="reveal">
+      <h2>Habilidades</h2>
+      <div class="skills" id="skill-grid"></div>
+    </section>
+
+    <section id="proyectos" class="reveal">
+      <h2>Proyectos</h2>
+      <div class="grid" id="project-list"></div>
+    </section>
+
+    <section id="formacion" class="reveal">
+      <h2>Formación</h2>
+      <ol class="timeline">
+        <li><span>2026 – Actualidad</span><h3>Máster en Data Analysis</h3><p>TU CENTRO</p></li>
+        <li><span>2026 – Actualidad</span><h3>2º CFGS Desarrollo de Aplicaciones Multiplataforma</h3><p>TU CENTRO</p></li>
+        <li><span>2025 – 2026</span><h3>1º CFGS Desarrollo de Aplicaciones Multiplataforma</h3><p>TU CENTRO</p></li>
+      </ol>
+    </section>
+
+    <section id="github" class="reveal">
+      <h2>Mi actividad en GitHub</h2>
+      <div class="gh-stats">
+        <img loading="lazy" alt="Estadísticas de GitHub" src="https://github-readme-stats.vercel.app/api?username=MarcelAbad&show_icons=true&theme=tokyonight&hide_border=true&bg_color=00000000" />
+        <img loading="lazy" alt="Lenguajes más usados" src="https://github-readme-stats.vercel.app/api/top-langs/?username=MarcelAbad&layout=compact&theme=tokyonight&hide_border=true&bg_color=00000000" />
+      </div>
+      <a class="btn primary" href="https://github.com/MarcelAbad?tab=repositories" target="_blank" rel="noopener">Ver todos mis repositorios ↗</a>
+    </section>
+
+    <section id="contacto" class="reveal contact">
+      <h2>¿Hablamos?</h2>
+      <p class="prose">¿Tienes un proyecto en mente o quieres colaborar? Escríbeme.</p>
+      <div class="cta">
+        <a class="btn primary" href="mailto:marcel.abad10@gmail.com">marcel.abad10@gmail.com</a>
+        <a class="btn" href="https://github.com/MarcelAbad" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="https://www.linkedin.com/in/TU-PERFIL" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>© <span id="year"></span> Marcel Abad · <a href="https://github.com/MarcelAbad" target="_blank" rel="noopener">github.com/MarcelAbad</a></footer>
+  <script src="script.js"></script>
+</body>
+</html>
