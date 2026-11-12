@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R4 Mano: puntero y pinza</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r3-movimiento.html">&larr; R3</a><a href="../resueltos/r5-componente.html">R5 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R4 Mano: puntero y pinza</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 e. Parte del cuerpo detectada: la mano.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <button id="iniciar">&#128400; Activar camara</button>
+    <!-- Enciende la camara -->
+    <p>Mueve el indice para mover el punto. Junta pulgar e indice (pinza) para pulsar.</p>
+    <div class="zona" id="zona">
+      <!-- Recuadro de la camara -->
+      <video id="video" playsinline muted></video>
+      <!-- Video de la camara -->
+      <div class="puntero" id="punto"></div>
+      <!-- Punto rojo que sigue al dedo -->
+      <div class="botones"><button id="b1">Pendiente</button><button id="b2">Pagado</button><button id="b3">Enviado</button></div>
+      <!-- Tres botones encima del video -->
+    </div>
+    <p>Estado: <b id="estado">-</b></p>
+    <!-- Aqui se escribe el boton pulsado -->
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script type="module">
+// Herramienta de manos: se descarga SOLO al activar la camara.
+let manos;
+async function prepararManos() {
+  const {HandLandmarker, FilesetResolver} = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm');
+  const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  manos = await HandLandmarker.createFromOptions(vision, {
+    baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'},
+    runningMode:'VIDEO', numHands:1
+  });
+}
+
+const video = document.getElementById('video'); // la camara
+const zona = document.getElementById('zona');   // el recuadro
+const punto = document.getElementById('punto'); // el punto rojo
+let pinzaAntes = false;  // recuerda si en el fotograma anterior habia pinza
+
+document.getElementById('iniciar').onclick = async () => { // al pulsar el boton
+  await prepararManos();
+  video.srcObject = await navigator.mediaDevices.getUserMedia({ video: {aspectRatio: 4/3}, audio:false }); // pedimos camara
+  await video.play();
+  document.getElementById('iniciar').disabled=true; // Impide bucles simultaneos.
+  window.addEventListener('pagehide',()=>video.srcObject?.getTracks().forEach(t=>t.stop()),{once:true}); // Libera camara al salir.    // encendemos
+  bucle();               // empezamos a vigilar la mano
+};
+
+function bucle() {       // se repite constantemente
+  if(video.currentTime===window.ultimoFrame){requestAnimationFrame(bucle);return;} window.ultimoFrame=video.currentTime;
+  const r = manos.detectForVideo(video, performance.now()); // buscamos manos en este fotograma
+  if (r.landmarks.length > 0) { // si hay mano
+    const mano = r.landmarks[0];   // los 21 puntos de la mano (valores de 0 a 1)
+    const indice = mano[8];        // punta del dedo indice
+    const pulgar = mano[4];        // punta del pulgar
+    const caja = zona.getBoundingClientRect(); // posicion y tamano del recuadro en pantalla
+    const x = (1 - indice.x) * caja.width;     // x en pixeles (1 - x porque el video esta en espejo)
+    const y = indice.y * caja.height;          // y en pixeles
+    punto.style.left = x + 'px';   // movemos el punto horizontalmente
+    punto.style.top = y + 'px';    // y verticalmente
+    const distancia = Math.hypot(indice.x - pulgar.x, indice.y - pulgar.y); // distancia entre dedos
+    const pinza = distancia < 0.05; // si es muy pequena, los dedos estan juntos
+    punto.classList.toggle('pinza', pinza); // punto verde con pinza
+    if (pinza && !pinzaAntes) {    // solo en el instante de juntar los dedos
+      const el = document.elementFromPoint(caja.left + x, caja.top + y); // elemento que hay bajo el punto
+      if (el && el.tagName === 'BUTTON' && zona.contains(el)) el.click(); // si es un boton de la zona, lo pulsamos
+    }
+    pinzaAntes = pinza;            // recordamos para el siguiente fotograma
+  }
+  if(typeof r!=='undefined' && !r.landmarks.length){if(typeof pinzaAntes!=='undefined')pinzaAntes=false;}
+  requestAnimationFrame(bucle);    // repetir
+}
+['b1', 'b2', 'b3'].forEach((id) => { // para cada uno de los tres botones
+  document.getElementById(id).onclick = (e) => { // al pulsarlo (con raton o con pinza)
+    document.getElementById('estado').textContent = e.target.textContent; // escribimos su texto
+  };
+});
+  </script>
+</body>
+</html>

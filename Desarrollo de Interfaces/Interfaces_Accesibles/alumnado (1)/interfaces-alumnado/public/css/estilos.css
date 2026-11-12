@@ -1,0 +1,123 @@
+/* Estilos de TODA la web de ejercicios. Un solo fichero para todos los .html */
+body {                                   /* el cuerpo de la pagina */
+  font-family: system-ui, Arial, sans-serif; /* tipo de letra */
+  margin: 0;                             /* sin margen exterior */
+  padding: 20px;                         /* espacio interior */
+  background: #f3f5f9;                   /* gris muy claro de fondo */
+  color: #1d2433;                        /* texto casi negro */
+}
+.nav {                                   /* barra de navegacion superior */
+  display: flex;                         /* elementos en fila */
+  flex-wrap: wrap;                       /* si no caben, pasan a otra linea (movil) */
+  gap: 8px;                              /* espacio entre enlaces */
+  margin-bottom: 16px;                   /* espacio debajo */
+}
+.nav a {                                 /* cada enlace de la barra */
+  background: #18203a;                   /* azul oscuro */
+  color: #fff;                           /* texto blanco */
+  padding: 8px 14px;                     /* relleno interior */
+  border-radius: 8px;                    /* esquinas redondeadas */
+  text-decoration: none;                 /* sin subrayado */
+}
+.caja {                                  /* tarjeta blanca de contenido */
+  background: #fff;                      /* fondo blanco */
+  border-radius: 12px;                   /* esquinas redondeadas */
+  padding: 16px;                         /* relleno */
+  margin-bottom: 16px;                   /* separacion con la siguiente */
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);  /* sombra suave */
+  max-width: 860px;                      /* ancho maximo (mas ancho para enunciados largos) */
+}
+.caja p, .caja li { line-height: 1.6; overflow-wrap: anywhere; } /* texto legible y sin cortes */
+.rejilla {                               /* cuadricula de enlaces del indice */
+  display: grid;                         /* modo cuadricula */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* columnas que se adaptan al ancho */
+  gap: 12px;                             /* espacio entre celdas */
+  max-width: 900px;                      /* ancho maximo */
+}
+.enlace {                                /* cada enlace-tarjeta del indice */
+  display: block;                        /* ocupa toda la celda */
+  background: #fff;                      /* fondo blanco */
+  padding: 14px;                         /* relleno */
+  border-radius: 10px;                   /* esquinas redondeadas */
+  text-decoration: none;                 /* sin subrayado */
+  color: inherit;                        /* mismo color que el texto */
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);  /* sombra */
+  border-left: 6px solid #17753a;        /* franja verde = resuelto */
+}
+.enlace.eval { border-left-color: #d97706; } /* franja naranja = evaluable */
+.enlace.prof { border-left-color: #7c3aed; } /* franja morada = solucion del profesor */
+.enlace small { color: #6b7488; display: block; margin-top: 4px; } /* texto pequeno gris */
+button {                                 /* todos los botones */
+  background: #2b5cff;                   /* azul */
+  color: #fff;                           /* texto blanco */
+  border: 0;                             /* sin borde */
+  border-radius: 8px;                    /* esquinas redondeadas */
+  padding: 10px 16px;                    /* relleno */
+  font-size: 1rem;                       /* tamano de letra */
+  cursor: pointer;                       /* manita al pasar el raton */
+  margin: 4px;                           /* separacion */
+}
+button.sel { background: #17753a; }      /* boton seleccionado en verde */
+input {                                  /* cuadros de texto */
+  padding: 10px;                         /* relleno */
+  border: 1px solid #ccc;                /* borde gris */
+  border-radius: 8px;                    /* esquinas redondeadas */
+  font-size: 1rem;                       /* tamano de letra */
+  width: 100%;                           /* ancho completo */
+  box-sizing: border-box;                /* el relleno no aumenta el ancho */
+  margin: 4px 0;                         /* separacion vertical */
+}
+table { border-collapse: collapse; width: 100%; } /* tablas: bordes unidos */
+td, th { border: 1px solid #ccc; padding: 6px; }  /* celdas con borde */
+.zona {                                  /* recuadro de la camara */
+  position: relative;                    /* para colocar cosas encima con "absolute" */
+  width: 100%;                           /* ancho completo... */
+  max-width: 640px;                      /* ...hasta 640px */
+  aspect-ratio: 4 / 3;                   /* proporcion 4:3 */
+  background: #000;                      /* fondo negro */
+  border-radius: 12px;                   /* esquinas redondeadas */
+  overflow: hidden;                      /* recorta lo que se salga */
+}
+.zona video, .zona canvas {              /* video o lienzo dentro de la zona */
+  width: 100%; height: 100%;             /* ocupan toda la zona */
+  object-fit: cover;                     /* se ajustan sin deformarse */
+  display: block;                        /* sin huecos */
+}
+.zona video { transform: scaleX(-1); }   /* voltear el video: efecto espejo */
+.puntero {                               /* el punto rojo que sigue al dedo */
+  position: absolute;                    /* colocado con left/top */
+  width: 26px; height: 26px;             /* tamano */
+  margin: -13px 0 0 -13px;               /* centrar el punto sobre su posicion */
+  border-radius: 50%;                    /* circulo */
+  background: rgba(255,60,60,.8);        /* rojo semitransparente */
+  border: 3px solid #fff;                /* borde blanco */
+  pointer-events: none;                  /* el punto no bloquea clics */
+}
+.puntero.pinza { background: rgba(60,255,100,.9); } /* verde cuando hay pinza */
+.ar-tarjeta {                            /* tarjeta de realidad aumentada */
+  position: absolute;                    /* flota sobre el video */
+  transform: translate(-50%, -110%);     /* centrada y por encima de la mano */
+  background: #fff;                      /* fondo blanco */
+  padding: 8px 12px;                     /* relleno */
+  border-radius: 10px;                   /* esquinas redondeadas */
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); /* sombra */
+  pointer-events: none;                  /* no bloquea clics */
+}
+.botones { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; gap: 6px; justify-content: center; } /* botones sobre el video */
+pre { background: #10162b; color: #dfe6ff; padding: 12px; border-radius: 8px; overflow: auto; } /* bloques de codigo */
+.ok { color: #17753a; }                  /* prueba superada: verde */
+.mal { color: #c0262d; }                 /* prueba fallida: rojo */
+@media (max-width: 600px) {              /* SOLO en pantallas pequenas (movil) */
+  body { padding: 10px; }                /* menos relleno */
+}
+
+/* Reglas finales: los enunciados crecen tanto como necesiten. */
+*{box-sizing:border-box}
+.enunciado{height:auto;max-height:none;overflow:visible;white-space:normal;min-width:0}
+.enunciado code{white-space:normal;overflow-wrap:anywhere}
+.enunciado li{margin-bottom:12px}
+.rejilla{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+h1,h2,h3,a,td,th{overflow-wrap:anywhere}
+.botones{flex-wrap:wrap;gap:2px}.botones button{font-size:.85rem;padding:6px}
+#error-global{color:#9b1919;background:#fff0ef;padding:12px;overflow-wrap:anywhere}
+.zona video{object-fit:fill} /* Se solicita 4:3 y no recortamos la imagen usada para coordenadas. */

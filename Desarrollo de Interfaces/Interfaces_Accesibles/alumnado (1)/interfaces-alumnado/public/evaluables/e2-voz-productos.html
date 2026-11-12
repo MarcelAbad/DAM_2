@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>E2 Filtrar por voz</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../evaluables/e1-voz-formulario.html">&larr; E1</a><a href="../evaluables/e3-movimiento-productos.html">E3 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>E2 Filtrar por voz</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 b, c. Completa los TODO siguiendo el enunciado completo.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+<section class="caja enunciado"><h2>Que debes hacer, paso a paso</h2><p>Archivo: <code>public/evaluables/e2-voz-productos.html</code>. Solo modifica frontend. Lee el resuelto relacionado antes de empezar.</p><ol><li>Al cargar, pide /api/products y guarda la respuesta JSON en productos. No sustituyas esta lista al filtrar.</li><li>Implementa pintar(lista): cabecera Nombre, Precio y Stock, y una fila por producto. Usa textContent o escapa los textos.</li><li>Di stock bajo: filtra p.stock &lt; 5. Con los datos originales debe quedar Teclado.</li><li>Di todos: vuelve a pintar productos sin filtrar.</li><li>Di buscar teclado: usa startsWith, slice(7) y p.name.toLowerCase().includes(busqueda).</li><li>Prueba buscar inexistente: no debe fallar; muestra Sin coincidencias.</li></ol><h3>Entrega</h3><p>Entrega tu HTML, los componentes modificados y una captura de la prueba. Explica los errores que controlas y comenta cada paso. No incluyas soluciones del profesor ni node_modules.</p><h3>Comprobacion final</h3><p>La consola no debe mostrar errores inesperados. Prueba tambien una entrada vacia, un permiso denegado o una lista sin resultados. Los TODO son intencionados: el evaluable no esta terminado hasta que los completes.</p></section><div class="caja"><button id="hablar">Hablar (una frase)</button><button id="iniciar">Activar camara</button><p id="msg" role="status" aria-live="polite"></p><table id="tabla"></table></div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+<script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
+  <script type="module">
+// Escribe aqui tu solucion siguiendo los pasos del enunciado.
+const $ = id => document.getElementById(id); // Busca un elemento por su id.
+// TODO 1: Preparar datos o componente.
+// TODO 2: Programar las acciones y eventos descritos arriba.
+// TODO 3: Mostrar resultados y errores; probar todos los casos.
+
+  </script>
+</body>
+</html>

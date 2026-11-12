@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>E4 Estado de pedido con la mano</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../evaluables/e3-movimiento-productos.html">&larr; E3</a><a href="../evaluables/e5-componente-insignia.html">E5 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>E4 Estado de pedido con la mano</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 e. Completa los TODO siguiendo el enunciado completo.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+<section class="caja enunciado"><h2>Que debes hacer, paso a paso</h2><p>Archivo: <code>public/evaluables/e4-mano-pedidos.html</code>. Solo modifica frontend. Lee el resuelto relacionado antes de empezar.</p><ol><li>Consulta R4. MediaPipe devuelve 21 puntos: m[8] es la punta del indice y m[4] la del pulgar.</li><li>Mueve el punto con x=(1-m[8].x)*ancho y y=m[8].y*alto. El 1-x compensa el espejo del video.</li><li>Calcula Math.hypot de las diferencias x e y entre los dos dedos. Menos de 0.05 significa pinza.</li><li>Haz clic solo si pinza es true y pinzaAntes era false. Busca el boton con elementFromPoint usando coordenadas de pantalla.</li><li>Antes de pulsar comprueba que el elemento es BUTTON y que zona.contains(elemento). Guarda pinzaAntes al terminar. Resetealo si desaparece la mano.</li><li>Cada boton lleva data-e. En su clic envia PUT /api/orders?id=1 con {status: estado}; comprueba errores y muestra el resultado.</li><li>Primero prueba los botones con raton. Luego mueve el indice y junta los dedos sobre un boton. Verifica /api/orders.</li></ol><h3>Entrega</h3><p>Entrega tu HTML, los componentes modificados y una captura de la prueba. Explica los errores que controlas y comenta cada paso. No incluyas soluciones del profesor ni node_modules.</p><h3>Comprobacion final</h3><p>La consola no debe mostrar errores inesperados. Prueba tambien una entrada vacia, un permiso denegado o una lista sin resultados. Los TODO son intencionados: el evaluable no esta terminado hasta que los completes.</p></section><div class="caja"><button id="hablar">Hablar (una frase)</button><button id="iniciar">Activar camara</button><p id="msg" role="status" aria-live="polite"></p><div class="zona" id="zona"><video id="video" playsinline muted></video><div class="puntero" id="punto" hidden></div><div class="botones"><button data-e="pending">Pendiente</button><button data-e="paid">Pagado</button><button data-e="shipped">Enviado</button><button data-e="cancelled">Cancelado</button></div></div></div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+<script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
+  <script type="module">
+// Escribe aqui tu solucion siguiendo los pasos del enunciado.
+const $ = id => document.getElementById(id); // Busca un elemento por su id.
+// TODO 1: Preparar datos o componente.
+// TODO 2: Programar las acciones y eventos descritos arriba.
+// TODO 3: Mostrar resultados y errores; probar todos los casos.
+
+  </script>
+</body>
+</html>

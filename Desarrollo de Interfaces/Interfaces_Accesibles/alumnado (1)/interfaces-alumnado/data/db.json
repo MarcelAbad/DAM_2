@@ -1,0 +1,62 @@
+{
+  "customers": [
+    {
+      "id": 1,
+      "name": "Acme Iberia S.L.",
+      "email": "info@acme.es",
+      "city": "Madrid"
+    },
+    {
+      "id": 2,
+      "name": "Luna Retail",
+      "email": "hola@luna.es",
+      "city": "Barcelona"
+    },
+    {
+      "id": 3,
+      "name": "Norte Foods",
+      "email": "ventas@norte.es",
+      "city": "Bilbao"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Portatil 14",
+      "price": 749,
+      "stock": 25
+    },
+    {
+      "id": 2,
+      "name": "Monitor 27",
+      "price": 229.9,
+      "stock": 40
+    },
+    {
+      "id": 3,
+      "name": "Teclado",
+      "price": 39.5,
+      "stock": 3
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "customer": "Acme Iberia S.L.",
+      "total": 1498,
+      "status": "paid"
+    },
+    {
+      "id": 2,
+      "customer": "Luna Retail",
+      "total": 1149.5,
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "customer": "Norte Foods",
+      "total": 79,
+      "status": "shipped"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R2 Voz + datos</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r1-voz-basica.html">&larr; R1</a><a href="../resueltos/r3-movimiento.html">R3 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R2 Voz + datos</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 b, c. La voz decide que datos pide la pagina al servidor.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <button id="hablar">&#127908; Di: clientes, productos o pedidos</button>
+    <!-- Boton para empezar a escuchar -->
+    <p>Has dicho: <b id="texto">...</b></p>
+    <!-- Frase entendida -->
+    <ul id="lista"></ul>
+    <!-- Lista vacia que rellenaremos con datos del servidor -->
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script>
+// El "oido" del navegador
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!Reconocimiento) throw new Error('Reconocimiento de voz no disponible en este navegador');
+const oido = new Reconocimiento(); // creamos el reconocedor
+oido.lang = 'es-ES';               // idioma espanol
+
+// Funcion que pide datos al servidor (el backend ya esta hecho, no se toca)
+async function mostrar(lista) {
+  const respuesta = await fetch('/api/' + lista);  // pedimos la lista al servidor y esperamos
+  const datos = await respuesta.json();            // convertimos la respuesta a objetos de JavaScript
+  const ul = document.getElementById('lista');    // buscamos la <ul> de la pagina
+  ul.innerHTML = '';                               // la vaciamos
+  datos.forEach((d) => {                           // recorremos cada elemento recibido
+    const li = document.createElement('li');       // creamos un <li> nuevo
+    li.textContent = d.name || d.customer;         // texto: nombre (o cliente, en pedidos)
+    ul.appendChild(li);                            // lo metemos en la lista
+  });
+}
+
+// Cuando el oido entiende algo...
+oido.onresult = (e) => {
+  const frase = e.results[0][0].transcript.toLowerCase(); // frase en minusculas
+  document.getElementById('texto').textContent = frase;   // la mostramos
+  if (frase.includes('cliente')) mostrar('customers');     // si contiene "cliente"
+  else if (frase.includes('producto')) mostrar('products');// si contiene "producto"
+  else if (frase.includes('pedido')) mostrar('orders');    // si contiene "pedido"
+  else document.getElementById('texto').textContent += ' (no entendido)'; // si no, avisamos
+};
+// Al pulsar el boton, escuchar
+document.getElementById('hablar').onclick = () => oido.start();
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R3 Movimiento del cuerpo</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r2-voz-datos.html">&larr; R2</a><a href="../resueltos/r4-mano-puntero.html">R4 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R3 Movimiento del cuerpo</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 d. Detecta movimiento comparando dos fotogramas (sin librerias).</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <button id="iniciar">&#128249; Activar camara</button>
+    <!-- Boton que enciende la camara -->
+    <p>Mueve el brazo a la izquierda o derecha de la imagen para cambiar de seccion.</p>
+    <!-- Instrucciones -->
+    <div class="zona"><canvas id="lienzo" width="160" height="120"></canvas></div>
+    <!-- Recuadro con un lienzo pequeno (160x120) donde se dibuja la camara -->
+    <div id="menu"></div>
+    <!-- Aqui se dibujaran los botones del menu -->
+    <p id="estado"></p>
+    <!-- Aqui se escribe la seccion elegida -->
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script>
+const secciones = ['Clientes', 'Productos', 'Pedidos']; // opciones del menu
+let actual = 0;          // posicion elegida ahora (0 = Clientes)
+let anterior = null;     // foto anterior, para comparar con la actual
+let bloqueo = 0;         // hora hasta la que no aceptamos otro cambio
+const lienzo = document.getElementById('lienzo'); // buscamos el lienzo
+const ctx = lienzo.getContext('2d', { willReadFrequently: true }); // "pincel" del lienzo
+const video = document.createElement('video');    // video invisible que recibe la camara
+
+function pintarMenu() {  // dibuja los botones del menu
+  document.getElementById('menu').innerHTML = secciones                // buscamos el div y ponemos HTML
+    .map((s, i) => '<button class="' + (i === actual ? 'sel' : '') + '">' + s + '</button>') // un boton por seccion (verde si es la actual)
+    .join('');           // los unimos en un solo texto
+}
+pintarMenu();            // lo dibujamos al cargar
+
+document.getElementById('iniciar').onclick = async () => { // al pulsar "Activar camara"
+  const flujo = await navigator.mediaDevices.getUserMedia({ video: {aspectRatio: 4/3}, audio:false }); // pedimos permiso de camara
+  video.srcObject = flujo; // conectamos la camara al video
+  await video.play();
+  document.getElementById('iniciar').disabled=true; // Impide bucles simultaneos.
+  window.addEventListener('pagehide',()=>video.srcObject?.getTracks().forEach(t=>t.stop()),{once:true}); // Libera camara al salir.      // encendemos el video
+  bucle();                 // empezamos a analizar
+};
+
+function bucle() {         // se repite muchas veces por segundo
+  ctx.save();              // guardamos el estado del pincel
+  ctx.translate(160, 0);   // movemos el origen a la derecha...
+  ctx.scale(-1, 1);        // ...y volteamos: efecto espejo
+  ctx.drawImage(video, 0, 0, 160, 120); // copiamos el fotograma al lienzo
+  ctx.restore();           // quitamos el espejo del pincel
+  const foto = ctx.getImageData(0, 0, 160, 120).data; // lista de numeros: R,G,B,A de cada pixel
+  if (anterior) {          // solo si ya tenemos una foto anterior
+    let izq = 0, der = 0;  // contadores de pixeles que han cambiado
+    for (let i = 0; i < foto.length; i += 4) { // recorremos pixel a pixel (4 numeros por pixel)
+      const brillo = foto[i] + foto[i + 1] + foto[i + 2];            // brillo actual
+      const brilloAntes = anterior[i] + anterior[i + 1] + anterior[i + 2]; // brillo de antes
+      if (Math.abs(brillo - brilloAntes) > 90) { // si cambio mucho = hubo movimiento
+        const x = (i / 4) % 160;                 // columna del pixel
+        if (x < 80) izq++; else der++;           // contamos en la mitad izquierda o derecha
+      }
+    }
+    const umbral = 600;    // minimo de pixeles cambiados para considerarlo movimiento
+    if (performance.now() > bloqueo && (izq > umbral || der > umbral)) { // hay movimiento y no estamos bloqueados
+      if (der > izq) actual = (actual + 1) % secciones.length;                         // derecha: siguiente
+      else actual = (actual + secciones.length - 1) % secciones.length;                // izquierda: anterior
+      pintarMenu();        // actualizamos el menu
+      document.getElementById('estado').textContent = 'Seccion: ' + secciones[actual]; // mostramos cual
+      bloqueo = performance.now() + 1000; // no aceptamos otro cambio durante 1 segundo
+    }
+  }
+  anterior = foto.slice(); // guardamos una copia de la foto para la proxima vez
+  if(typeof r!=='undefined' && !r.landmarks.length){if(typeof pinzaAntes!=='undefined')pinzaAntes=false;}
+  requestAnimationFrame(bucle); // pedimos al navegador repetir esta funcion
+}
+  </script>
+</body>
+</html>

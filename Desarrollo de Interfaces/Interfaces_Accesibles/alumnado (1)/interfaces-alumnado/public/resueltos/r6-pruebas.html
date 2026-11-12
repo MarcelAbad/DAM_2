@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R6 Pruebas unitarias</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r5-componente.html">&larr; R5</a><a href="../resueltos/r7-ar-mano.html">R7 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R6 Pruebas unitarias</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA3 e, f. Pruebas automaticas: cada una dice OK o FALLA.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <ul id="salida"></ul>
+    <!-- Lista donde saldran los resultados de las pruebas -->
+    <div id="zonaPrueba"></div>
+    <!-- Zona donde se crean componentes de prueba -->
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script type="module">
+import { test, igual } from '/componentes/pruebas.js'; // importamos nuestro mini sistema de pruebas
+await import('/componentes/erp-tarjeta.js');              // cargamos el componente a probar
+const salida = document.getElementById('salida');         // lista de resultados
+const zona = document.getElementById('zonaPrueba');       // zona de prueba
+
+test('titulo por defecto', () => {            // prueba 1
+  const t = document.createElement('erp-tarjeta'); // creamos una tarjeta sin atributos
+  zona.appendChild(t);                        // la metemos en la pagina
+  igual(t.titulo, 'Sin titulo');              // el titulo debe ser el de por defecto
+}, salida);
+
+test('valor por defecto es 0', () => {        // prueba 2
+  const t = document.createElement('erp-tarjeta'); zona.appendChild(t); // creamos e insertamos
+  igual(t.valor, '0');                        // valor por defecto
+}, salida);
+
+test('cambiar valor cambia el atributo', () => { // prueba 3
+  const t = document.createElement('erp-tarjeta'); zona.appendChild(t); // creamos e insertamos
+  t.valor = 15;                               // usamos la propiedad
+  igual(t.getAttribute('valor'), '15');       // el atributo HTML debe haber cambiado
+}, salida);
+
+test('al hacer clic lanza "seleccionada"', () => { // prueba 4
+  const t = document.createElement('erp-tarjeta'); t.titulo = 'X'; zona.appendChild(t); // tarjeta con titulo X
+  let recibido = '';                          // aqui guardaremos lo que llegue
+  t.addEventListener('seleccionada', (e) => { recibido = e.detail.titulo; }); // escuchamos el evento
+  t.click();                                  // simulamos un clic
+  igual(recibido, 'X');                       // debe haber llegado el titulo
+}, salida);
+  </script>
+</body>
+</html>

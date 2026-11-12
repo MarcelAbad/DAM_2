@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R7 Realidad aumentada</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r6-pruebas.html">&larr; R6</a><a href="../evaluables/e1-voz-formulario.html">E1 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R7 Realidad aumentada</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 f. Realidad aumentada simple: informacion digital sobre la imagen real.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <button id="iniciar">&#128376; Activar camara</button>
+    <!-- Enciende la camara -->
+    <p>Ensena la mano: aparece una tarjeta de producto sobre ella. Pinza = siguiente producto.</p>
+    <div class="zona" id="zona">
+      <video id="video" playsinline muted></video>
+      <!-- Video de la camara -->
+      <div class="ar-tarjeta" id="ar" hidden></div>
+      <!-- La tarjeta "aumentada" (oculta hasta que se vea una mano) -->
+    </div>
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script type="module">
+// Herramienta de manos: se descarga SOLO al activar la camara.
+let manos;
+async function prepararManos() {
+  const {HandLandmarker, FilesetResolver} = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm');
+  const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  manos = await HandLandmarker.createFromOptions(vision, {
+    baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'},
+    runningMode:'VIDEO', numHands:1
+  });
+}
+
+const productos = await (await fetch('/api/products')).json(); // pedimos los productos al servidor
+let i = 0;               // producto que se muestra ahora
+let pinzaAntes = false;  // control de la pinza
+const video = document.getElementById('video'); // la camara
+const zona = document.getElementById('zona');   // el recuadro
+const ar = document.getElementById('ar');       // la tarjeta aumentada
+document.getElementById('iniciar').onclick = async () => { // al pulsar el boton
+  await prepararManos();
+  video.srcObject = await navigator.mediaDevices.getUserMedia({ video: {aspectRatio: 4/3}, audio:false }); // camara
+  await video.play();
+  document.getElementById('iniciar').disabled=true; // Impide bucles simultaneos.
+  window.addEventListener('pagehide',()=>video.srcObject?.getTracks().forEach(t=>t.stop()),{once:true}); // Libera camara al salir.    // encender
+  bucle();               // empezar
+};
+function bucle() {       // se repite constantemente
+  if(video.currentTime===window.ultimoFrame){requestAnimationFrame(bucle);return;} window.ultimoFrame=video.currentTime;
+  const r = manos.detectForVideo(video, performance.now()); // buscamos la mano
+  ar.hidden = r.landmarks.length === 0; // sin mano = tarjeta oculta
+  if (!ar.hidden) {      // con mano...
+    const m = r.landmarks[0];                   // puntos de la mano
+    const caja = zona.getBoundingClientRect();  // tamano del recuadro
+    ar.style.left = (1 - m[9].x) * caja.width + 'px'; // el punto 9 es el centro de la mano (con espejo)
+    ar.style.top = m[9].y * caja.height + 'px';       // posicion vertical
+    const p = productos[i];                     // producto actual
+    ar.innerHTML = '<b>' + p.name + '</b><br>' + p.price + ' EUR - stock ' + p.stock; // texto de la tarjeta
+    const pinza = Math.hypot(m[8].x - m[4].x, m[8].y - m[4].y) < 0.05; // dedos juntos?
+    if (pinza && !pinzaAntes) i = (i + 1) % productos.length;          // siguiente producto
+    pinzaAntes = pinza;                         // recordamos
+  }
+  if(typeof r!=='undefined' && !r.landmarks.length){if(typeof pinzaAntes!=='undefined')pinzaAntes=false;}
+  requestAnimationFrame(bucle); // repetir
+}
+  </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+OK Enlaces e1-voz-formulario.html
+OK JS e1-voz-formulario.html
+OK Enunciado completo e1-voz-formulario.html
+OK Enlaces e2-voz-productos.html
+OK JS e2-voz-productos.html
+OK Enunciado completo e2-voz-productos.html
+OK Enlaces e3-movimiento-productos.html
+OK JS e3-movimiento-productos.html
+OK Enunciado completo e3-movimiento-productos.html
+OK Enlaces e4-mano-pedidos.html
+OK JS e4-mano-pedidos.html
+OK Enunciado completo e4-mano-pedidos.html
+OK Enlaces e5-componente-insignia.html
+OK JS e5-componente-insignia.html
+OK Enunciado completo e5-componente-insignia.html
+OK Enlaces e6-pruebas-paquete.html
+OK JS e6-pruebas-paquete.html
+OK Enunciado completo e6-pruebas-paquete.html
+OK Enlaces e7-proyecto-integrado.html
+OK JS e7-proyecto-integrado.html
+OK Enunciado completo e7-proyecto-integrado.html
+OK Enlaces index.html
+OK JS index.html
+OK Enlaces herramientas.html
+OK JS herramientas.html
+OK Enlaces rubrica.html
+OK JS rubrica.html
+OK Enlaces r1-voz-basica.html
+OK JS r1-voz-basica.html
+OK Enlaces r2-voz-datos.html
+OK JS r2-voz-datos.html
+OK Enlaces r3-movimiento.html
+OK JS r3-movimiento.html
+OK Enlaces r4-mano-puntero.html
+OK JS r4-mano-puntero.html
+OK Enlaces r5-componente.html
+OK JS r5-componente.html
+OK Enlaces r6-pruebas.html
+OK JS r6-pruebas.html
+OK Enlaces r7-ar-mano.html
+OK JS r7-ar-mano.html
+OK Sintaxis erp-insignia.js
+OK Sintaxis erp-tarjeta.js
+OK Sintaxis pruebas.js
+OK Sintaxis ayudas.js
+OK Sintaxis errores.js
+OK Sintaxis logica.js
+OK Normaliza voz
+OK Indice avanza
+OK Indice retrocede
+OK Indice lista vacia
+OK Stock bajo
+OK Buscar sin distinguir mayusculas
+OK Sin coincidencias
+OK Todos
+OK Movimiento sin foto previa
+OK Movimiento izquierda
+OK Sin movimiento
+OK Pinza cerrada
+OK Tarjeta valores por defecto
+OK Tarjeta actualiza atributo y texto
+OK Tarjeta evita HTML de usuario
+OK Tarjeta un evento tras reconectar
+OK Enunciados sin alturas fijas ni recorte
+OK Inicio apunta a index.html
+TOTAL 65 pruebas aprobadas. Sin fallos.
+

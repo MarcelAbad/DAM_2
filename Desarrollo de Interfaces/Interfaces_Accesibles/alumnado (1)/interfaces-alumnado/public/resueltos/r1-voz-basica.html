@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<!-- Declara que esto es una pagina HTML5 -->
+<html lang="es">
+<!-- Inicio del documento, idioma espanol -->
+<head>
+  <!-- HEAD: informacion que NO se ve en la pagina -->
+  <meta charset="UTF-8">
+  <!-- Permite tildes y enyes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hace que la pagina se adapte al movil (responsive) -->
+  <title>R1 Voz basica</title>
+  <!-- Titulo de la pestana del navegador -->
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Carga los estilos (colores, tamanos) desde el fichero CSS -->
+<script src="../js/errores.js"></script></head>
+<body>
+  <!-- BODY: todo lo que SI se ve en la pagina -->
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a><a href="../resueltos/r2-voz-datos.html">R2 &rarr;</a></div>
+  <!-- Barra de navegacion: volver al inicio, ejercicio anterior y siguiente -->
+  <h1>R1 Voz basica</h1>
+  <!-- Titulo grande de la pagina -->
+  <div class="caja"><b>Criterios:</b> RA2 c. Aprendes a convertir voz en texto.</div>
+  <!-- Caja informativa con los criterios de evaluacion que trabaja el ejercicio -->
+  <div class="caja">
+    <!-- Caja blanca -->
+    <button id="hablar">&#127908; Hablar</button>
+    <!-- Boton: al pulsarlo empezamos a escuchar -->
+    <p>Has dicho: <b id="texto">...</b></p>
+    <!-- Aqui se escribira lo que entienda el navegador -->
+    <p id="aviso"></p>
+    <!-- Aqui se escribiran avisos o errores -->
+  </div>
+  <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
+  <script>
+// 1) Buscamos el "oido" del navegador (Chrome/Edge lo tienen; a veces con prefijo webkit)
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+// 2) Si no existe, avisamos al usuario
+if (!Reconocimiento) { document.getElementById('aviso').textContent = 'Usa Chrome o Edge'; }
+// 3) Creamos el reconocedor de voz (el "oido")
+if(!Reconocimiento) throw new Error('Reconocimiento de voz no disponible en este navegador');
+const oido = new Reconocimiento();
+// 4) Le decimos el idioma: espanol de Espana
+oido.lang = 'es-ES';
+// 5) Evento "onresult": se ejecuta cuando el oido ha entendido algo
+oido.onresult = (evento) => {
+  // 6) Sacamos la frase entendida de los resultados
+  const frase = evento.results[0][0].transcript;
+  // 7) La escribimos en la pagina
+  document.getElementById('texto').textContent = frase;
+};
+// 8) Evento "onerror": se ejecuta si algo falla (ej. sin permiso de microfono)
+oido.onerror = (e) => { document.getElementById('aviso').textContent = 'Error: ' + e.error; };
+// 9) Al hacer clic en el boton, empezamos a escuchar (el navegador pide permiso la primera vez)
+document.getElementById('hablar').onclick = () => oido.start();
+  </script>
+</body>
+</html>
