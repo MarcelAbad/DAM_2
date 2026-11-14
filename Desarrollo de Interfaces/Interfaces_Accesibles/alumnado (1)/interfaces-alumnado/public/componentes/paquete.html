@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Pagina de verificacion del paquete (E6, paso 7). -->
+<!-- IMPORTANTE: solo se carga el paquete; NO se cargan a la vez los ficheros originales de los componentes. -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prueba del paquete</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <!-- Unico script: el paquete creado con "npm run empaquetar" (une erp-tarjeta + erp-insignia) -->
+  <script src="/dist/erp-componentes.js"></script>
+</head>
+<body>
+  <div class="nav"><a href="../index.html">&#127968; Inicio</a></div>
+  <h1>Prueba del paquete erp-componentes.js</h1>
+  <div class="caja">
+    <p>Si ves la tarjeta y la insignia, las dos etiquetas estan registradas.</p>
+    <erp-tarjeta titulo="Clientes" valor="3"></erp-tarjeta>
+    <br>
+    <erp-insignia estado="paid"></erp-insignia>
+    <p id="resultado" role="status" aria-live="polite"></p>
+  </div>
+  <script>
+    // Comprobamos que el navegador conoce las dos etiquetas.
+    const t = !!customElements.get('erp-tarjeta');   // true si <erp-tarjeta> esta registrada
+    const i = !!customElements.get('erp-insignia');  // true si <erp-insignia> esta registrada
+    document.getElementById('resultado').textContent =
+      'erp-tarjeta: ' + (t ? 'OK' : 'FALLA') + ' | erp-insignia: ' + (i ? 'OK' : 'FALLA');
+  </script>
+</body>
+</html>

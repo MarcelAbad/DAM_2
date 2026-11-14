@@ -25,12 +25,120 @@
   <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
 <script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
-// TODO 1: Preparar datos o componente.
-// TODO 2: Programar las acciones y eventos descritos arriba.
-// TODO 3: Mostrar resultados y errores; probar todos los casos.
+// ============================================================================
+// E4 - Cambiar el estado de un pedido con la mano
+// Idea: la camara + MediaPipe detectan 21 puntos de la mano. La punta del dedo
+// INDICE mueve un punto rojo por la pantalla. Si juntas indice y pulgar (PINZA)
+// "pulsas" el boton que haya debajo del punto. Cada boton cambia el estado del
+// pedido 1 en el servidor (PUT /api/orders?id=1).
+// ============================================================================
 
+const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
+
+// ---------------------------------------------------------------------------
+// TODO 1: Preparar datos o componente. (HECHO)
+// ---------------------------------------------------------------------------
+const msg = $("msg"); // Parrafo de avisos.
+const video = $("video"); // Video de la camara.
+const zona = $("zona"); // Recuadro que contiene video, punto y botones.
+const punto = $("punto"); // Punto rojo que sigue al indice.
+$("hablar").hidden = true; // Este ejercicio no usa voz: escondemos el boton sobrante.
+let manos = null; // Detector de manos de MediaPipe (se crea al activar la camara).
+let pinzaAntes = false; // Paso 4: recuerda si en el fotograma anterior habia pinza.
+let ultimoFrame = -1; // Tiempo del ultimo fotograma analizado (para no repetir el mismo).
+
+function mostrar(texto, esError = false) { // Escribe un mensaje (verde = bien, rojo = error).
+  msg.textContent = texto; // textContent: nunca se interpreta como HTML.
+  msg.style.color = esError ? "crimson" : "green"; // Rojo si es error.
+} // Fin de mostrar.
+
+async function prepararManos() { // Descarga y prepara MediaPipe (solo al activar la camara, porque pesa).
+  const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm"); // Libreria.
+  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"); // Motor WebAssembly.
+  manos = await HandLandmarker.createFromOptions(vision, { // Creamos el detector con estas opciones:
+    baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" }, // Modelo.
+    runningMode: "VIDEO", // Analiza video (no fotos sueltas).
+    numHands: 1 // Solo una mano.
+  }); // Fin de createFromOptions.
+} // Fin de prepararManos.
+
+// ---------------------------------------------------------------------------
+// TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
+// ---------------------------------------------------------------------------
+// Paso 6: cada boton lleva data-e con su estado (pending, paid, shipped, cancelled).
+async function cambiarEstado(estado) { // Se ejecuta al pulsar un boton (con raton O con pinza).
+  try { // Puede fallar la red o el servidor.
+    await Ayudas.escribir("/api/orders?id=1", "PUT", { status: estado }); // PUT = modificar. Lanza error si la respuesta no es ok.
+    mostrar("Pedido 1 cambiado a: " + estado); // Resultado visible.
+  } catch (error) { // Error de red o HTTP.
+    mostrar("No se pudo cambiar el estado: " + error.message, true); // Error visible.
+  } // Fin del try/catch.
+} // Fin de cambiarEstado.
+
+zona.querySelectorAll("button[data-e]").forEach(boton => { // Para cada boton de estado...
+  boton.addEventListener("click", () => cambiarEstado(boton.dataset.e)); // ...al hacer clic envia SU estado (dataset.e lee data-e).
+}); // Fin del forEach. Paso 7: se pueden probar primero con el raton.
+
+function bucle() { // Se repite en cada fotograma de la camara.
+  if (video.currentTime === ultimoFrame) { // Si la camara aun no ha dado un fotograma nuevo...
+    requestAnimationFrame(bucle); // ...esperamos al siguiente...
+    return; // ...sin analizar (MediaPipe falla si se le da el mismo fotograma dos veces).
+  } // Fin del if.
+  ultimoFrame = video.currentTime; // Apuntamos el fotograma que vamos a analizar.
+  const resultado = manos.detectForVideo(video, performance.now()); // Buscamos manos en este fotograma.
+  if (resultado.landmarks.length > 0) { // Si hay mano...
+    const m = resultado.landmarks[0]; // Sus 21 puntos (valores de 0 a 1). m[8] = punta del indice, m[4] = punta del pulgar.
+    const caja = zona.getBoundingClientRect(); // Posicion y tamano del recuadro en pantalla.
+    const x = (1 - m[8].x) * caja.width; // Paso 2: x en pixeles. El "1 -" compensa el efecto espejo del video.
+    const y = m[8].y * caja.height; // y en pixeles (la y no se invierte).
+    punto.hidden = false; // Mostramos el punto...
+    punto.style.left = x + "px"; // ...lo movemos en horizontal...
+    punto.style.top = y + "px"; // ...y en vertical.
+    const distancia = Math.hypot(m[8].x - m[4].x, m[8].y - m[4].y); // Paso 3: distancia entre indice y pulgar (Pitagoras).
+    const pinza = distancia < 0.05; // Menos de 0.05 = dedos juntos = pinza.
+    punto.classList.toggle("pinza", pinza); // El punto se pone verde con pinza.
+    if (pinza && !pinzaAntes) { // Paso 4: SOLO en el instante de juntar los dedos (antes no habia pinza).
+      const elemento = document.elementFromPoint(caja.left + x, caja.top + y); // Elemento bajo el punto (coordenadas de PANTALLA: sumamos caja.left/top).
+      if (elemento && elemento.tagName === "BUTTON" && zona.contains(elemento)) elemento.click(); // Paso 5: solo si es un BOTON de nuestra zona.
+    } // Fin del if de pinza.
+    pinzaAntes = pinza; // Guardamos el estado para el siguiente fotograma.
+  } else { // Si NO se ve la mano...
+    punto.hidden = true; // ...escondemos el punto...
+    pinzaAntes = false; // ...y reseteamos la pinza (paso 5), para que al volver a aparecer no cuente como pulsacion falsa.
+  } // Fin del if de mano.
+  requestAnimationFrame(bucle); // Repetimos.
+} // Fin de bucle.
+
+async function iniciar() { // Se ejecuta al pulsar "Activar camara".
+  $("iniciar").disabled = true; // Evita arrancar dos bucles a la vez.
+  try { // Puede fallar: descarga de MediaPipe, camara denegada...
+    mostrar("Cargando detector de manos..."); // Aviso (la descarga tarda unos segundos).
+    await prepararManos(); // Preparamos MediaPipe.
+    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Pide permiso de camara.
+    video.srcObject = flujo; // Conectamos la camara al video.
+    await video.play(); // Encendemos el video.
+    window.addEventListener("pagehide", () => flujo.getTracks().forEach(t => t.stop()), { once: true }); // Libera la camara al salir.
+    mostrar("Camara activa. Mueve el indice y junta los dedos sobre un boton."); // Instruccion.
+    bucle(); // Empezamos a vigilar la mano.
+  } catch (error) { // Cualquier fallo.
+    $("iniciar").disabled = false; // Permitimos reintentar.
+    if (error.name === "NotAllowedError") mostrar("Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.", true); // Permiso denegado.
+    else if (error.name === "NotFoundError") mostrar("No se ha encontrado ninguna camara.", true); // Sin camara.
+    else mostrar("No se pudo iniciar: " + error.message, true); // Otro fallo (por ejemplo, sin internet para MediaPipe).
+  } // Fin del try/catch.
+} // Fin de iniciar.
+
+$("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa la camara.
+
+// ---------------------------------------------------------------------------
+// TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
+// Resultado: mostrar() dice a que estado se ha cambiado el pedido 1.
+// Casos controlados: permiso de camara denegado, sin camara, fallo al cargar
+// MediaPipe, mano que desaparece (se esconde el punto y se resetea la pinza),
+// error de red o HTTP al hacer PUT, y pulsar fuera de los botones (no hace nada).
+// Prueba: 1) botones con raton; 2) indice sobre un boton y juntar los dedos;
+// 3) abrir http://localhost:3000/api/orders y ver el status del pedido 1.
+// ---------------------------------------------------------------------------
   </script>
 </body>
 </html>

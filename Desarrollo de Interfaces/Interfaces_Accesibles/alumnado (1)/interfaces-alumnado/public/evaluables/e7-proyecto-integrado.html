@@ -25,12 +25,164 @@
   <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
 <script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
-// TODO 1: Preparar datos o componente.
-// TODO 2: Programar las acciones y eventos descritos arriba.
-// TODO 3: Mostrar resultados y errores; probar todos los casos.
+// ============================================================================
+// E7 - Proyecto integrado: lista de pedidos + voz + mano (realidad aumentada 2D)
+// Junta tres cosas ya vistas:
+//   R2 (voz): "pagados" filtra la lista, "todos" la recupera.
+//   E5 (componente): cada pedido muestra su <erp-insignia>.
+//   R4 / R7 (mano): una tarjeta HTML sigue a la mano (punto m[9]) y una PINZA
+//                   pasa al siguiente pedido.
+// OJO: es una superposicion 2D anclada a la imagen. NO es WebXR ni seguimiento 3D.
+// ============================================================================
 
+const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
+
+// ---------------------------------------------------------------------------
+// TODO 1: Preparar datos o componente. (HECHO)
+// ---------------------------------------------------------------------------
+await import("/componentes/erp-insignia.js"); // Registra <erp-insignia> (hecha en E5).
+const msg = $("msg"); // Parrafo de avisos.
+const video = $("video"); // Video de la camara.
+const zona = $("zona"); // Recuadro de la camara.
+const ar = $("ar"); // Tarjeta que se ancla a la mano.
+const lista = $("lista"); // Contenedor de la lista de pedidos.
+
+let pedidos = []; // Paso 2: lista ORIGINAL (nunca se modifica).
+let visibles = []; // Paso 2: lista que se ensena ahora (todos o filtrados).
+let i = 0; // Paso 2: indice del pedido que muestra la tarjeta.
+let manos = null; // Detector de manos (se crea al activar la camara).
+let pinzaAntes = false; // Si en el fotograma anterior habia pinza.
+let ultimoFrame = -1; // Para no analizar dos veces el mismo fotograma.
+
+function mostrar(texto, esError = false) { // Escribe un mensaje (verde = bien, rojo = error).
+  msg.textContent = texto; // textContent: nunca se interpreta como HTML.
+  msg.style.color = esError ? "crimson" : "green"; // Rojo si es error.
+} // Fin de mostrar.
+
+// Paso 3: pintarLista dibuja cliente, total e insignia de cada pedido.
+function pintarLista() { // Pinta la lista "visibles".
+  lista.textContent = ""; // Vaciamos la lista anterior.
+  if (visibles.length === 0) { // Si no hay pedidos que mostrar...
+    const p = document.createElement("p"); // ...ponemos un parrafo de aviso.
+    p.textContent = "No hay pedidos que mostrar."; // Texto del aviso.
+    lista.appendChild(p); // Lo metemos en la lista.
+    return; // Nada mas que pintar.
+  } // Fin del if.
+  visibles.forEach(pedido => { // Una fila por pedido.
+    const fila = document.createElement("div"); // Fila.
+    fila.className = "caja"; // Estilo de caja ya existente en el CSS.
+    const texto = document.createElement("span"); // Texto con cliente y total.
+    texto.textContent = pedido.customer + " - " + pedido.total + " EUR "; // textContent: seguro aunque el nombre tenga "<".
+    const insignia = document.createElement("erp-insignia"); // Componente de estado.
+    insignia.estado = pedido.status; // Su estado (pending, paid...).
+    insignia.inert = true; // Aqui solo informa: no se puede pulsar (si no, cambiaria solo en pantalla y no en el servidor).
+    fila.append(texto, insignia); // Metemos texto e insignia en la fila.
+    lista.appendChild(fila); // Fila a la lista.
+  }); // Fin del forEach.
+} // Fin de pintarLista.
+
+async function cargar() { // Paso 2: carga los pedidos del servidor.
+  try { // Puede fallar la red o el servidor.
+    pedidos = await Ayudas.pedir("/api/orders"); // Pide /api/orders (lanza error si no es ok).
+    visibles = pedidos; // Al principio se ven todos.
+    i = 0; // Empezamos por el primero.
+    pintarLista(); // Pintamos.
+    mostrar("Pedidos cargados: " + pedidos.length + "."); // Resultado.
+  } catch (error) { // Error de red o HTTP.
+    mostrar("No se pudieron cargar los pedidos: " + error.message, true); // Error visible.
+  } // Fin del try/catch.
+} // Fin de cargar.
+
+// ---------------------------------------------------------------------------
+// TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
+// ---------------------------------------------------------------------------
+// Paso 4: voz. "pagados" filtra; "todos" recupera.
+function ejecutarOrden(texto) { // Recibe la frase del microfono.
+  const frase = texto.toLowerCase().trim().replace(/[.,;:!?]+$/, ""); // Minusculas, sin espacios ni punto final.
+  if (frase === "pagados") { // Filtro.
+    visibles = pedidos.filter(p => p.status === "paid"); // Nueva lista solo con los pagados (el original no cambia).
+  } else if (frase === "todos") { // Recuperar.
+    visibles = pedidos; // Volvemos a la lista original.
+  } else { // Otra frase.
+    mostrar("No he entendido: \"" + frase + "\". Di pagados o todos.", true); // Aviso.
+    return; // No tocamos nada.
+  } // Fin del if.
+  i = 0; // Paso 4: reiniciar el indice tras filtrar (si no, podria apuntar fuera de la lista).
+  pintarLista(); // Repintamos la lista.
+  mostrar(visibles.length === 0 ? "Sin resultados." : "Mostrando " + visibles.length + " pedido(s).", visibles.length === 0); // Resultado.
+} // Fin de ejecutarOrden.
+
+Ayudas.voz($("hablar"), ejecutarOrden, msg); // Ayuda del profesor: escucha una frase por pulsacion y gestiona sus errores.
+
+async function prepararManos() { // Descarga MediaPipe solo al activar la camara.
+  const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm"); // Libreria.
+  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"); // Motor WebAssembly.
+  manos = await HandLandmarker.createFromOptions(vision, { // Detector con estas opciones:
+    baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" }, // Modelo.
+    runningMode: "VIDEO", // Analiza video.
+    numHands: 1 // Una mano.
+  }); // Fin de createFromOptions.
+} // Fin de prepararManos.
+
+function ocultarTarjeta() { // Paso 7: esconde la tarjeta y resetea la pinza.
+  ar.hidden = true; // Tarjeta oculta.
+  pinzaAntes = false; // Reseteo: al volver la mano no cuenta como pinza nueva.
+} // Fin de ocultarTarjeta.
+
+function bucle() { // Se repite en cada fotograma.
+  if (video.currentTime === ultimoFrame) { // Fotograma repetido...
+    requestAnimationFrame(bucle); // ...esperamos al siguiente...
+    return; // ...sin analizar.
+  } // Fin del if.
+  ultimoFrame = video.currentTime; // Apuntamos el fotograma.
+  const resultado = manos.detectForVideo(video, performance.now()); // Buscamos la mano.
+  if (resultado.landmarks.length === 0 || visibles.length === 0) { // Paso 7: sin mano O sin pedidos...
+    ocultarTarjeta(); // ...escondemos la tarjeta (y NO accedemos a una lista vacia).
+  } else { // Hay mano y hay pedidos.
+    const m = resultado.landmarks[0]; // Los 21 puntos de la mano.
+    const caja = zona.getBoundingClientRect(); // Tamano del recuadro.
+    ar.style.left = (1 - m[9].x) * caja.width + "px"; // Paso 5: m[9] = centro de la mano. "1 -" por el espejo.
+    ar.style.top = m[9].y * caja.height + "px"; // Posicion vertical.
+    const pinza = Math.hypot(m[8].x - m[4].x, m[8].y - m[4].y) < 0.05; // Indice y pulgar juntos = pinza.
+    if (pinza && !pinzaAntes) i++; // Paso 6: solo al pasar de abierta a cerrada, avanza el indice (antes de pintar, para verlo al instante).
+    pinzaAntes = pinza; // Recordamos para el siguiente fotograma.
+    const pedido = visibles[i % visibles.length]; // Paso 6: el modulo evita salirnos de la lista (i crece, pero % lo mantiene en rango).
+    ar.textContent = pedido.customer + " - " + pedido.total + " EUR - " + pedido.status; // Texto seguro de la tarjeta.
+    ar.hidden = false; // Mostramos la tarjeta.
+  } // Fin del if.
+  requestAnimationFrame(bucle); // Repetimos.
+} // Fin de bucle.
+
+async function iniciar() { // Paso 5: al pulsar "Activar camara".
+  $("iniciar").disabled = true; // Evita dos bucles a la vez.
+  try { // Puede fallar: MediaPipe, camara denegada...
+    mostrar("Cargando detector de manos..."); // Aviso.
+    await prepararManos(); // Preparamos MediaPipe.
+    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Permiso de camara.
+    video.srcObject = flujo; // Conectamos camara y video.
+    await video.play(); // Encendemos.
+    window.addEventListener("pagehide", () => flujo.getTracks().forEach(t => t.stop()), { once: true }); // Libera la camara al salir.
+    mostrar("Camara activa. Ensena la mano; junta indice y pulgar para pasar de pedido."); // Instruccion.
+    bucle(); // Empezamos.
+  } catch (error) { // Cualquier fallo.
+    $("iniciar").disabled = false; // Permitimos reintentar.
+    if (error.name === "NotAllowedError") mostrar("Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.", true); // Permiso denegado.
+    else if (error.name === "NotFoundError") mostrar("No se ha encontrado ninguna camara.", true); // Sin camara.
+    else mostrar("No se pudo iniciar: " + error.message, true); // Otro fallo.
+  } // Fin del try/catch.
+} // Fin de iniciar.
+
+$("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa la camara.
+
+// ---------------------------------------------------------------------------
+// TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
+// Casos controlados (se prueban por separado, paso 8): lista (cargar), voz
+// ("pagados"/"todos"), mano (tarjeta anclada), pinza (cambia de pedido), permiso
+// de camara denegado, servidor caido, filtro sin resultados (lista vacia) y mano
+// que desaparece (tarjeta oculta y pinza reseteada).
+// Recordatorio: es una superposicion 2D anclada, no WebXR ni seguimiento 3D.
+// ---------------------------------------------------------------------------
+cargar(); // Arranca la carga de pedidos.
   </script>
 </body>
 </html>

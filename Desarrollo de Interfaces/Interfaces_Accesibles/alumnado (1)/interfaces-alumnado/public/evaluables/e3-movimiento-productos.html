@@ -25,12 +25,120 @@
   <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
 <script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
-// TODO 1: Preparar datos o componente.
-// TODO 2: Programar las acciones y eventos descritos arriba.
-// TODO 3: Mostrar resultados y errores; probar todos los casos.
+// ============================================================================
+// E3 - Pasar productos con movimiento
+// Idea: la camara saca fotos muchas veces por segundo. Comparamos cada foto con
+// la anterior: si muchos pixeles cambian en la mitad DERECHA -> siguiente
+// producto; si cambian en la IZQUIERDA -> producto anterior.
+// OJO (lo dice el enunciado): NO reconocemos poses, solo diferencias de imagen,
+// asi que un cambio de luz tambien puede activar la accion.
+// ============================================================================
 
+const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
+
+// ---------------------------------------------------------------------------
+// TODO 1: Preparar datos o componente. (HECHO)
+// ---------------------------------------------------------------------------
+await import("/componentes/erp-tarjeta.js"); // Carga el componente: registra la etiqueta <erp-tarjeta>.
+const msg = $("msg"); // Parrafo de avisos.
+const tarjeta = $("tarjeta"); // Tarjeta (componente) que muestra el producto actual.
+const lienzo = $("lienzo"); // Canvas de 160x120 donde copiamos cada fotograma.
+const ctx = lienzo.getContext("2d", { willReadFrequently: true }); // "Pincel" del canvas (willReadFrequently: vamos a leer pixeles a menudo).
+const video = document.createElement("video"); // Video invisible que recibe la camara.
+video.muted = true; // Sin sonido (necesario para que el navegador deje reproducirlo solo).
+video.playsInline = true; // En movil no lo abre a pantalla completa.
+$("hablar").hidden = true; // Este ejercicio no usa voz: escondemos el boton sobrante.
+
+const ANCHO = 160, ALTO = 120; // Tamano del canvas (pequeno = analisis rapido).
+const DIFERENCIA = 90; // Un pixel "ha cambiado" si su brillo varia mas de 90.
+const UMBRAL = 600; // Minimo de pixeles cambiados en un lado para contar como movimiento.
+const BLOQUEO_MS = 1000; // Tras un cambio, 1 segundo sin aceptar otro.
+
+let productos = []; // Lista de productos del servidor.
+let actual = 0; // Posicion del producto que se ve ahora.
+let anterior = null; // Foto anterior (para comparar con la actual).
+let bloqueadoHasta = 0; // Hora (performance.now) hasta la que no aceptamos cambios.
+
+function mostrar(texto, esError = false) { // Escribe un mensaje (verde = bien, rojo = error).
+  msg.textContent = texto; // textContent: nunca se interpreta como HTML.
+  msg.style.color = esError ? "crimson" : "green"; // Rojo si es error.
+} // Fin de mostrar.
+
+// Paso 2: mostrarProducto() pone el producto actual en la tarjeta.
+function mostrarProducto() { // Actualiza la tarjeta.
+  const p = productos[actual]; // Producto actual.
+  tarjeta.titulo = p.name; // titulo = nombre del producto (usa el "set titulo" del componente).
+  tarjeta.valor = p.stock; // valor = stock del producto.
+} // Fin de mostrarProducto.
+
+// ---------------------------------------------------------------------------
+// TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
+// ---------------------------------------------------------------------------
+function bucle() { // Se repite ~60 veces por segundo (una vuelta = una foto).
+  ctx.save(); // Guardamos el estado del pincel.
+  ctx.translate(ANCHO, 0); // Movemos el origen a la derecha...
+  ctx.scale(-1, 1); // ...y volteamos: efecto espejo (izquierda del usuario = izquierda de la pantalla).
+  ctx.drawImage(video, 0, 0, ANCHO, ALTO); // Copiamos el fotograma actual al canvas.
+  ctx.restore(); // Quitamos el espejo del pincel.
+  const foto = ctx.getImageData(0, 0, ANCHO, ALTO).data; // Lista de numeros R,G,B,A de cada pixel.
+
+  if (anterior) { // Solo si ya tenemos una foto anterior con la que comparar.
+    let izq = 0, der = 0; // Contadores de pixeles cambiados a cada lado.
+    for (let i = 0; i < foto.length; i += 4) { // Paso 3: avanzamos de 4 en 4 (cada pixel son 4 numeros: R,G,B,A).
+      const brillo = foto[i] + foto[i + 1] + foto[i + 2]; // Brillo actual = R+G+B.
+      const brilloAntes = anterior[i] + anterior[i + 1] + anterior[i + 2]; // Brillo de la foto anterior.
+      if (Math.abs(brillo - brilloAntes) > DIFERENCIA) { // Paso 4: ¿ha cambiado mas de 90?
+        const columna = (i / 4) % ANCHO; // Columna del pixel (i/4 = numero de pixel; % 160 = posicion en su fila).
+        if (columna < ANCHO / 2) izq++; else der++; // Menos de 80 = izquierda; si no, derecha.
+      } // Fin del if de cambio.
+    } // Fin del for.
+
+    if ((izq > UMBRAL || der > UMBRAL) && performance.now() > bloqueadoHasta) { // Paso 5: movimiento suficiente y bloqueo terminado.
+      const n = productos.length; // Cantidad de productos.
+      if (der > izq) actual = (actual + 1) % n; // Derecha: avanza (el % vuelve al principio tras el ultimo).
+      else actual = (actual - 1 + n) % n; // Izquierda: retrocede (el + n evita numeros negativos).
+      mostrarProducto(); // Paso 6: actualiza la tarjeta...
+      bloqueadoHasta = performance.now() + BLOQUEO_MS; // ...y bloquea 1000 ms para no cambiar 20 veces seguidas.
+    } // Fin del if de movimiento.
+  } // Fin del if (anterior).
+  anterior = foto.slice(); // Paso 6: guardamos una COPIA (slice) para la siguiente vuelta; sin copia, "foto" se sobrescribe.
+  requestAnimationFrame(bucle); // Pedimos al navegador repetir esta funcion en el siguiente fotograma.
+} // Fin de bucle.
+
+async function iniciar() { // Se ejecuta al pulsar "Activar camara".
+  $("iniciar").disabled = true; // Evita pulsar dos veces y arrancar dos bucles a la vez.
+  try { // Puede fallar: servidor caido, camara denegada...
+    productos = await Ayudas.pedir("/api/products"); // Paso 2: carga los productos (lanza error si el servidor falla).
+    if (productos.length === 0) { // Lista vacia: no hay nada que mostrar.
+      mostrar("No hay productos que mostrar.", true); // Se avisa...
+      $("iniciar").disabled = false; // ...y se permite reintentar.
+      return; // No arrancamos la camara.
+    } // Fin del if.
+    mostrarProducto(); // Mostramos el primer producto.
+    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Pide permiso de camara.
+    video.srcObject = flujo; // Conectamos la camara al video.
+    await video.play(); // Encendemos el video.
+    window.addEventListener("pagehide", () => flujo.getTracks().forEach(t => t.stop()), { once: true }); // Libera la camara al salir de la pagina.
+    mostrar("Camara activa. Mueve el brazo a la izquierda o a la derecha."); // Instruccion.
+    bucle(); // Empezamos a analizar fotogramas.
+  } catch (error) { // Cualquier fallo de arriba.
+    $("iniciar").disabled = false; // Permitimos reintentar.
+    if (error.name === "NotAllowedError") mostrar("Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.", true); // Caso: permiso denegado.
+    else if (error.name === "NotFoundError") mostrar("No se ha encontrado ninguna camara.", true); // Caso: sin camara.
+    else mostrar("Error: " + error.message, true); // Cualquier otro caso.
+  } // Fin del try/catch.
+} // Fin de iniciar.
+
+$("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa la camara.
+
+// ---------------------------------------------------------------------------
+// TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
+// Resultado: la tarjeta cambia de producto (nombre y stock) y mostrar() avisa.
+// Casos controlados: permiso de camara denegado, sin camara, servidor caido,
+// lista de productos vacia (no se accede a productos[0]) y pulsar dos veces.
+// Prueba: buena luz y fondo quieto; mover el brazo a cada lado. Si es demasiado
+// sensible (o poco), se cambia la constante UMBRAL (600).
+// ---------------------------------------------------------------------------
   </script>
 </body>
 </html>

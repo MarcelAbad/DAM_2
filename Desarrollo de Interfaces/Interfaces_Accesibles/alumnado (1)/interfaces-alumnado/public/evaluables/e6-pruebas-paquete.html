@@ -25,12 +25,94 @@
   <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
 <script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
-// TODO 1: Preparar datos o componente.
-// TODO 2: Programar las acciones y eventos descritos arriba.
-// TODO 3: Mostrar resultados y errores; probar todos los casos.
+// ============================================================================
+// E6 - Pruebas automaticas del componente <erp-insignia>
+// Cada test crea SU PROPIA insignia, la mete en la pagina y comprueba un caso.
+// test(nombre, funcion, lista) ejecuta la funcion: si no lanza error -> OK,
+// si lanza error (porque igual() no coincide) -> FALLA.
+// ============================================================================
 
+// ---------------------------------------------------------------------------
+// TODO 1: Preparar datos o componente. (HECHO)
+// ---------------------------------------------------------------------------
+import { test, igual } from "/componentes/pruebas.js"; // Mini sistema de pruebas (test e igual).
+await import("/componentes/erp-insignia.js"); // Registra <erp-insignia> para poder probarla.
+const salida = document.getElementById("salida"); // Lista <ul> donde se escriben los resultados.
+const zona = document.getElementById("zonaPrueba"); // Zona donde se insertan las insignias de prueba.
+document.getElementById("hablar").hidden = true; // Boton sobrante de la plantilla.
+document.getElementById("iniciar").hidden = true; // Boton sobrante de la plantilla.
+
+function crear(estado) { // Ayuda: crea una insignia nueva (con o sin estado), la inserta y la devuelve.
+  const t = document.createElement("erp-insignia"); // Creamos la etiqueta.
+  if (estado !== undefined) t.setAttribute("estado", estado); // Si nos dan estado, lo ponemos como atributo.
+  zona.appendChild(t); // La insertamos en la pagina.
+  return t; // La devolvemos para usarla en el test.
+} // Fin de crear.
+
+// ---------------------------------------------------------------------------
+// TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
+// ---------------------------------------------------------------------------
+test("1. sin atributo devuelve pending", () => { // Prueba 1.
+  const t = crear(); // Insignia sin estado.
+  igual(t.estado, "pending"); // Debe valer pending (valor por defecto).
+}, salida);
+
+test("2. estado paid devuelve paid", () => { // Prueba 2.
+  const t = crear("paid"); // Insignia con estado paid.
+  igual(t.estado, "paid"); // Debe devolver paid.
+}, salida);
+
+test("3. estado xyz (invalido) devuelve pending", () => { // Prueba 3.
+  const t = crear("xyz"); // Estado que no existe.
+  igual(t.estado, "pending"); // Debe caer al valor por defecto.
+}, salida);
+
+test("4. un clic cambia pending a paid y emite cambio", () => { // Prueba 4.
+  const t = crear(); // Insignia en pending.
+  let recibido = ""; // Aqui guardaremos lo que llegue en el evento.
+  t.addEventListener("cambio", (e) => { recibido = e.detail.estado; }); // Escuchamos el evento propio.
+  t.click(); // Simulamos un clic.
+  igual(t.estado, "paid"); // El estado debe ser paid...
+  igual(recibido, "paid"); // ...y el evento debe haber traido detail.estado = paid.
+}, salida);
+
+test("5. ciclo completo: pending > paid > shipped > cancelled > pending", () => { // Prueba 5 (anadida).
+  const t = crear(); // Insignia en pending.
+  const vistos = []; // Estados que va anunciando el evento.
+  t.addEventListener("cambio", (e) => vistos.push(e.detail.estado)); // Los apuntamos.
+  for (let i = 0; i < 4; i++) t.click(); // Cuatro clics seguidos.
+  igual(vistos.join(","), "paid,shipped,cancelled,pending"); // El orden debe ser exactamente ese.
+  igual(t.estado, "pending"); // Y al final vuelve a pending.
+}, salida);
+
+test("6. el cambio visual: cada estado se dibuja distinto", () => { // Prueba 6 (anadida).
+  const t = crear(); // Insignia en pending.
+  const antes = t.shadowRoot.innerHTML; // HTML interno con pending.
+  t.click(); // Pasa a paid.
+  const despues = t.shadowRoot.innerHTML; // HTML interno con paid.
+  igual(antes !== despues, true); // Tienen que ser distintos (otro color y otro texto).
+}, salida);
+
+test("7. reconectar la insignia no duplica eventos", () => { // Prueba 7 (anadida).
+  const t = crear(); // Insignia en pending.
+  let n = 0; // Contador de eventos recibidos.
+  t.addEventListener("cambio", () => n++); // Cada evento suma 1.
+  t.remove(); // La quitamos de la pagina...
+  zona.appendChild(t); // ...y la volvemos a insertar (connectedCallback se ejecuta otra vez).
+  t.click(); // Un solo clic.
+  igual(n, 1); // Debe haber UN solo evento (no dos).
+  igual(t.estado, "paid"); // Y avanzar UN solo estado (no dos).
+}, salida);
+
+// ---------------------------------------------------------------------------
+// TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
+// Resultado: cada test escribe una linea verde "OK" o roja "FALLA" en #salida.
+// Casos cubiertos: valor por defecto, valor valido, valor invalido, clic + evento,
+// ciclo completo, cambio visual y reconexion sin eventos duplicados.
+// Si una prueba falla, el mensaje dice "esperaba X pero salio Y".
+// Documentacion: public/componentes/README.md. Paquete: npm run empaquetar y
+// pagina public/componentes/paquete.html (solo carga /dist/erp-componentes.js).
+// ---------------------------------------------------------------------------
   </script>
 </body>
 </html>

@@ -27,128 +27,154 @@
 <script src="../js/logica.js"></script>
 <script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
+// ============================================================================
+// E1 - Dictar un cliente por voz
+// Idea general: pulsas "Hablar", dices UNA frase ("nombre Ana"), el navegador la
+// convierte en texto, nosotros la limpiamos, miramos con que palabra empieza
+// y rellenamos el campo que toca. Al decir "guardar" se envia al servidor.
+// ============================================================================
 
+const $ = id => document.getElementById(id); // Atajo: busca un elemento de la pagina por su id.
+
+// ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
+// Aqui solo "cogemos" las piezas de la pagina que vamos a usar.
+// ---------------------------------------------------------------------------
 const msg = $("msg"); // Parrafo donde se muestran los avisos y los errores al usuario.
 const inputNombre = $("name"); // Campo de texto donde se escribe el nombre.
 const inputCiudad = $("city"); // Campo de texto donde se escribe la ciudad.
 const inputEmail = $("email"); // Campo de texto donde se escribe el correo.
 const btnHablar = $("hablar"); // Boton que activa el microfono para una frase.
 const btnGuardar = $("guardar"); // Boton para guardar usando el raton.
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // Reconocimiento de voz del navegador (Chrome usa el nombre con prefijo webkit).
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // Reconocimiento de voz (Chrome lo llama webkitSpeechRecognition).
 
-function mostrar(texto, esError = false) { // Funcion auxiliar: escribe un mensaje en pantalla.
-  msg.textContent = texto; // Pone el texto dentro del parrafo de mensajes.
+function mostrar(texto, esError = false) { // Escribe un mensaje en pantalla (verde = bien, rojo = error).
+  msg.textContent = texto; // textContent y NO innerHTML: lo que diga el usuario nunca se interpreta como HTML.
   msg.style.color = esError ? "crimson" : "green"; // Rojo si es un error, verde si todo ha ido bien.
 } // Fin de mostrar.
 
-function capitalizar(texto) { // Funcion auxiliar: pone la primera letra en mayuscula.
-  return texto.charAt(0).toUpperCase() + texto.slice(1); // "ana" pasa a ser "Ana".
+function capitalizar(texto) { // Pone la primera letra en mayuscula: "ana" -> "Ana".
+  return texto.charAt(0).toUpperCase() + texto.slice(1); // Primera letra en mayuscula + el resto igual.
 } // Fin de capitalizar.
 
-function limpiarEmail(texto) { // Funcion auxiliar: convierte lo dictado en un correo real.
+function limpiarEmail(texto) { // Convierte lo dictado en un correo de verdad.
   return texto
-    .replace(/arroba/g, "@") // Cambia la palabra "arroba" por el simbolo @.
-    .replace(/punto/g, ".") // Cambia la palabra "punto" por el simbolo .
-    .replace(/\s+/g, ""); // Elimina todos los espacios del correo.
+    .replace(/arroba/g, "@") // "ana arroba mail" -> "ana @ mail".
+    .replace(/punto/g, ".") // "mail punto es" -> "mail . es".
+    .replace(/\s+/g, ""); // Quita TODOS los espacios: "ana @ mail . es" -> "ana@mail.es".
 } // Fin de limpiarEmail.
 
+// ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
-function procesarFrase(frase) { // Decide que hacer con la frase ya limpia (en minusculas y sin espacios sobrantes).
-  if (frase.startsWith("nombre ")) { // Si la frase empieza por "nombre "...
-    inputNombre.value = capitalizar(frase.slice(7)); // ...se queda con lo que va despues (7 letras: "nombre ") y lo escribe en el input.
-    mostrar("Nombre escrito. Revisalo antes de guardar."); // Avisa al usuario de que se ha rellenado.
-  } else if (frase.startsWith("ciudad ")) { // Si la frase empieza por "ciudad "...
-    inputCiudad.value = capitalizar(frase.slice(7)); // ...se queda con lo que va despues (7 letras: "ciudad ") y lo escribe en el input.
-    mostrar("Ciudad escrita. Revisala antes de guardar."); // Avisa al usuario de que se ha rellenado.
-  } else if (frase.startsWith("email ")) { // Si la frase empieza por "email "...
-    inputEmail.value = limpiarEmail(frase.slice(6)); // ...se queda con lo que va despues (6 letras: "email "), lo convierte en correo y lo escribe.
-    mostrar("Correo escrito. Revisalo antes de guardar."); // Avisa al usuario de que se ha rellenado.
-  } else if (frase === "guardar") { // Si solo se ha dicho la palabra "guardar"...
-    guardar(); // ...se envian los datos al servidor.
-  } else { // Si la frase no empieza por ninguna palabra clave...
-    mostrar("No he entendido: \"" + frase + "\". Di nombre..., ciudad..., email... o guardar.", true); // ...se avisa y se muestra lo que se ha oido.
+// ---------------------------------------------------------------------------
+function procesarFrase(frase) { // Recibe la frase YA limpia y decide que campo rellenar.
+  if (frase.startsWith("nombre ")) { // Paso 2: ¿empieza por "nombre "?
+    inputNombre.value = capitalizar(frase.slice(7)); // slice(7) quita las 7 letras de "nombre " y deja solo el nombre.
+    mostrar("Nombre escrito. Revisalo antes de guardar."); // Avisa de que se ha rellenado.
+  } else if (frase.startsWith("ciudad ")) { // ¿empieza por "ciudad "?
+    inputCiudad.value = capitalizar(frase.slice(7)); // "ciudad " tambien tiene 7 letras, asi que slice(7) otra vez.
+    mostrar("Ciudad escrita. Revisala antes de guardar."); // Avisa de que se ha rellenado.
+  } else if (frase.startsWith("email ")) { // ¿empieza por "email "?
+    inputEmail.value = limpiarEmail(frase.slice(6)); // "email " tiene 6 letras: slice(6); despues arroba->@ y punto->.
+    mostrar("Correo escrito. Revisalo antes de guardar."); // Avisa de que se ha rellenado.
+  } else if (frase === "guardar") { // ¿Se ha dicho solo "guardar"?
+    guardar(); // Si: se envian los datos al servidor.
+  } else { // Ninguna palabra clave reconocida.
+    mostrar("No he entendido: \"" + frase + "\". Di nombre..., ciudad..., email... o guardar.", true); // Se muestra lo que oyo para que el usuario entienda el fallo.
   } // Fin del if.
 } // Fin de procesarFrase.
 
-function escuchar() { // Se ejecuta al pulsar Hablar: escucha UNA frase.
-  if (!SpeechRecognition) { // Si el navegador no tiene reconocimiento de voz...
-    mostrar("Tu navegador no admite reconocimiento de voz. Prueba con Chrome.", true); // ...se avisa del problema.
-    return; // ...y se sale sin hacer nada mas.
+function escuchar() { // Se ejecuta al pulsar Hablar: escucha UNA sola frase.
+  if (!SpeechRecognition) { // Navegador sin reconocimiento de voz (Firefox, Safari antiguo...).
+    mostrar("Tu navegador no admite reconocimiento de voz. Prueba con Chrome o Edge.", true); // Explicamos el problema.
+    return; // No seguimos: no hay microfono que activar.
   } // Fin del if.
-  const rec = new SpeechRecognition(); // Crea un reconocedor nuevo para esta frase.
-  rec.lang = "es-ES"; // Le dice que escuche en espanol.
-  rec.continuous = false; // Solo una frase: se para solo al terminar de hablar.
-  rec.interimResults = false; // Solo devuelve el resultado final, no los parciales.
-  rec.onstart = () => { // Cuando empieza a escuchar...
-    btnHablar.disabled = true; // ...desactiva el boton para no lanzar dos escuchas a la vez.
-    mostrar("Escuchando... di una frase."); // ...y avisa al usuario.
+  const rec = new SpeechRecognition(); // Creamos un "oido" nuevo para esta frase.
+  rec.lang = "es-ES"; // Escucha en espanol de Espana.
+  rec.continuous = false; // Una frase y se para solo.
+  rec.interimResults = false; // Solo el resultado final, no los intentos intermedios.
+  rec.onstart = () => { // Cuando el microfono empieza a escuchar...
+    btnHablar.disabled = true; // ...desactivamos Hablar para no lanzar dos escuchas a la vez...
+    mostrar("Escuchando... di una frase."); // ...y avisamos al usuario.
   }; // Fin de onstart.
-  rec.onresult = (evento) => { // Cuando el navegador ha entendido una frase...
-    const frase = evento.results[0][0].transcript // ...coge el texto que ha entendido el navegador...
-      .toLowerCase() // ...lo pasa a minusculas...
-      .trim() // ...quita los espacios de los extremos...
-      .replace(/^(e-mail|imeil|correo) /, "email "); // ...y si empieza por una variante (e-mail, imeil, correo) la cambia por "email ".
-    procesarFrase(frase); // ...y decide que campo rellenar.
+  rec.onresult = (evento) => { // Cuando el navegador ya ha entendido la frase...
+    const frase = evento.results[0][0].transcript // Texto que ha entendido el navegador.
+      .toLowerCase() // Paso 2 del enunciado: todo en minusculas ("Nombre Ana" -> "nombre ana")...
+      .trim() // ...y sin espacios al principio ni al final.
+      .replace(/[.,;:!?]+$/, "") // Quita signos finales: Chrome a veces anade un punto ("guardar." o "ana@mail.es.").
+      .replace(/^(e-mail|imeil|correo) /, "email "); // Acepta variantes que Chrome oye como "email": e-mail, imeil, correo.
+    procesarFrase(frase); // Decide que campo rellenar con la frase limpia.
   }; // Fin de onresult.
-  rec.onerror = (evento) => { // Si ocurre un error con el microfono o el reconocimiento...
-    if (evento.error === "not-allowed" || evento.error === "service-not-allowed") { // ...y el motivo es que no hay permiso...
-      mostrar("Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.", true); // ...explica como solucionarlo.
-    } else if (evento.error === "no-speech") { // ...si no se ha oido nada...
-      mostrar("No he oido nada. Pulsa Hablar y prueba otra vez.", true); // ...pide repetirlo.
-    } else { // ...para cualquier otro error...
-      mostrar("Error de voz: " + evento.error, true); // ...muestra el codigo del error.
+  rec.onerror = (evento) => { // Si falla el microfono o el reconocimiento...
+    if (evento.error === "not-allowed" || evento.error === "service-not-allowed") { // ...por permiso denegado...
+      mostrar("Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.", true); // ...explicamos como arreglarlo.
+    } else if (evento.error === "no-speech") { // ...por no oir nada...
+      mostrar("No he oido nada. Pulsa Hablar y prueba otra vez.", true); // ...pedimos repetirlo.
+    } else { // ...o por cualquier otra cosa...
+      mostrar("Error de voz: " + evento.error, true); // ...mostramos el codigo del error.
     } // Fin del if.
   }; // Fin de onerror.
-  rec.onend = () => { // Cuando termina de escuchar (con o sin error)...
-    btnHablar.disabled = false; // ...vuelve a activar el boton Hablar.
+  rec.onend = () => { // Al terminar (bien o mal)...
+    btnHablar.disabled = false; // ...volvemos a activar Hablar (hay que pulsarlo antes de CADA frase).
   }; // Fin de onend.
-  rec.start(); // Arranca el microfono.
+  try { // start() puede lanzar excepcion (por ejemplo si ya estaba escuchando).
+    rec.start(); // Arranca el microfono; la primera vez el navegador pide permiso.
+  } catch (error) { // Si falla...
+    btnHablar.disabled = false; // ...no dejamos el boton bloqueado...
+    mostrar("No se pudo iniciar el microfono: " + error.message, true); // ...y lo contamos.
+  } // Fin del try/catch.
 } // Fin de escuchar.
 
-async function guardar() { // Recoge los datos, los valida y los envia al servidor.
-  const name = inputNombre.value.trim(); // Lee el nombre del input y quita espacios sobrantes.
-  const city = inputCiudad.value.trim(); // Lee la ciudad del input y quita espacios sobrantes.
-  const email = inputEmail.value.trim(); // Lee el correo del input y quita espacios sobrantes.
+let guardando = false; // Candado: evita enviar dos veces el mismo cliente si se pulsa dos veces seguidas.
 
-  if (!name || !city) { // Si el nombre o la ciudad estan vacios...
-    mostrar("El nombre y la ciudad no pueden estar vacios.", true); // ...avisa del error.
-    return; // ...y no envia nada.
+async function guardar() { // Paso 5 y 6: recoge, valida y envia.
+  if (guardando) return; // Si ya hay un envio en marcha, no hacemos otro.
+  const name = inputNombre.value.trim(); // Paso 5: recogemos los tres .value (sin espacios sobrantes).
+  const city = inputCiudad.value.trim(); // Ciudad.
+  const email = inputEmail.value.trim(); // Correo.
+
+  if (!name || !city) { // Validacion: nombre y ciudad NO pueden estar vacios.
+    mostrar("El nombre y la ciudad no pueden estar vacios.", true); // Avisamos del error.
+    return; // No se envia nada.
   } // Fin del if.
-  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); // Comprueba el formato: algo + @ + algo + . + algo, sin espacios.
-  if (!emailValido) { // Si el correo no tiene formato valido...
-    mostrar("El correo no es valido. Ejemplo: ana@mail.es", true); // ...avisa del error.
-    return; // ...y no envia nada.
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); // Formato valido: algo + @ + algo + . + algo, sin espacios.
+  if (!emailValido) { // Si el correo no cumple el formato...
+    mostrar("El correo no es valido. Ejemplo: ana@mail.es", true); // ...avisamos...
+    return; // ...y no se envia nada.
   } // Fin del if.
 
-  try { // Intenta enviar los datos; si falla la red, salta al catch.
-    const respuesta = await fetch("/api/customers", { // Envia una peticion al servidor y espera su respuesta.
-      method: "POST", // POST porque vamos a CREAR un cliente nuevo.
-      headers: { "Content-Type": "application/json" }, // Avisa al servidor de que el cuerpo viaja en formato JSON.
+  guardando = true; // Cerramos el candado.
+  btnGuardar.disabled = true; // Y desactivamos el boton mientras se envia.
+  try { // Intentamos enviar; si no hay red, salta al catch.
+    const respuesta = await fetch("/api/customers", { // Paso 6: peticion al servidor (espera la respuesta).
+      method: "POST", // POST = crear un registro nuevo.
+      headers: { "Content-Type": "application/json" }, // Avisa al servidor de que el cuerpo es JSON.
       body: JSON.stringify({ name, city, email }) // Convierte los tres datos en texto JSON.
     }); // Fin del fetch.
-    if (!respuesta.ok) { // Si el servidor responde con error (400, 500...)...
-      mostrar("El servidor respondio con error " + respuesta.status + ". Los datos siguen escritos.", true); // ...lo muestra sin borrar lo escrito.
-      return; // ...y sale.
+    if (!respuesta.ok) { // Comprobamos respuesta.ok: es false con errores 400, 404, 500...
+      mostrar("El servidor respondio con error " + respuesta.status + ". Los datos siguen escritos.", true); // Error visible, sin borrar lo escrito.
+      return; // Salimos (el finally de abajo se ejecuta igualmente).
     } // Fin del if.
-    mostrar("Cliente guardado: " + name + ", " + city + ", " + email + "."); // Si todo ha ido bien, confirma al usuario.
-  } catch (error) { // Si hay un error de red (sin conexion, servidor caido)...
-    mostrar("Error de red: no se pudo contactar con el servidor. Tus datos siguen escritos, vuelve a intentarlo.", true); // ...lo muestra sin perder lo escrito.
-  } // Fin del try/catch.
+    mostrar("Cliente guardado: " + name + ", " + city + ", " + email + "."); // Todo bien: confirmamos.
+  } catch (error) { // Error de red (sin conexion, servidor apagado).
+    mostrar("Error de red: no se pudo contactar con el servidor. Tus datos siguen escritos, vuelve a intentarlo.", true); // Error visible y los inputs NO se borran.
+  } finally { // finally se ejecuta SIEMPRE, haya ido bien o mal.
+    guardando = false; // Abrimos el candado...
+    btnGuardar.disabled = false; // ...y reactivamos el boton.
+  } // Fin del try/catch/finally.
 } // Fin de guardar.
 
 btnHablar.addEventListener("click", escuchar); // Al pulsar Hablar se escucha una frase.
 btnGuardar.addEventListener("click", guardar); // Al pulsar Guardar con raton se envian los datos.
 
+// ---------------------------------------------------------------------------
 // TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
 // Resultados: mostrar() escribe en #msg el exito o el error de cada accion.
-// Casos controlados: navegador sin voz, permiso de microfono denegado, silencio,
-// frase no entendida, nombre o ciudad vacios, correo invalido, error HTTP y error de red.
-// Prueba final: nombre Ana, ciudad Madrid, email ana arroba mail punto es, guardar,
-// y comprobar el registro abriendo /api/customers.
-
+// Casos controlados: navegador sin voz, permiso denegado, silencio, frase no
+// entendida, nombre/ciudad vacios, correo invalido, error HTTP y error de red.
+// Prueba final: "nombre Ana", "ciudad Madrid", "email ana arroba mail punto es",
+// "guardar"; despues abrir http://localhost:3000/api/customers y ver el registro.
+// ---------------------------------------------------------------------------
   </script>
 </body>
 </html>

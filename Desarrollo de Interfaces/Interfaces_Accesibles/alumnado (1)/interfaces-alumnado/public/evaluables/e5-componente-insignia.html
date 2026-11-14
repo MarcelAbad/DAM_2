@@ -25,12 +25,59 @@
   <!-- Aqui acaba el HTML visible; ahora viene el codigo JavaScript (el "cerebro") -->
 <script src="../js/logica.js"></script><script src="../js/ayudas.js"></script>
   <script type="module">
-// Escribe aqui tu solucion siguiendo los pasos del enunciado.
-const $ = id => document.getElementById(id); // Busca un elemento por su id.
-// TODO 1: Preparar datos o componente.
-// TODO 2: Programar las acciones y eventos descritos arriba.
-// TODO 3: Mostrar resultados y errores; probar todos los casos.
+// ============================================================================
+// E5 - Probar el componente <erp-insignia>
+// El componente (public/componentes/erp-insignia.js) ya hace el trabajo: aqui
+// solo lo cargamos y escuchamos su evento propio "cambio" para anotarlo en un log.
+// ============================================================================
 
+const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
+
+// ---------------------------------------------------------------------------
+// TODO 1: Preparar datos o componente. (HECHO)
+// ---------------------------------------------------------------------------
+await import("/componentes/erp-insignia.js"); // Carga el componente: registra la etiqueta <erp-insignia>.
+const log = $("log"); // Lista <ul> donde se anotan los cambios.
+const msg = $("msg"); // Parrafo de avisos.
+$("hablar").hidden = true; // Este ejercicio no usa voz: escondemos el boton sobrante.
+$("iniciar").hidden = true; // Ni camara: escondemos el otro boton sobrante.
+
+// ---------------------------------------------------------------------------
+// TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
+// ---------------------------------------------------------------------------
+// Paso 7: escuchamos "cambio" en el document. Funciona para las 3 insignias porque el
+// evento lleva bubbles:true (sube hasta aqui) y composed:true (atraviesa el Shadow DOM).
+document.addEventListener("cambio", (evento) => { // Se ejecuta cada vez que una insignia cambia de estado.
+  const insignias = [...document.querySelectorAll("erp-insignia")]; // Todas las insignias de la pagina, en orden.
+  const numero = insignias.indexOf(evento.target) + 1; // Que insignia ha sido (1, 2 o 3). evento.target es la propia etiqueta.
+  const li = document.createElement("li"); // Nueva linea de lista.
+  li.textContent = "Insignia " + numero + " -> " + evento.detail.estado; // textContent: texto seguro. detail.estado = nuevo valor.
+  log.appendChild(li); // La anadimos al log.
+  msg.textContent = "Ultimo cambio: insignia " + numero + " ahora es " + evento.detail.estado + "."; // Aviso para lectores de pantalla (aria-live).
+}); // Fin del listener.
+
+// Boton extra para la prueba "quitar y volver a insertar una insignia".
+const primera = document.querySelector("erp-insignia"); // La primera insignia.
+const boton = document.createElement("button"); // Boton nuevo.
+boton.textContent = "Quitar y volver a insertar la primera"; // Su texto.
+boton.addEventListener("click", () => { // Al pulsarlo...
+  const padre = primera.parentNode; // ...guardamos donde estaba...
+  const siguiente = primera.nextSibling; // ...y que elemento tenia detras...
+  primera.remove(); // ...la quitamos de la pagina (se ejecuta disconnectedCallback)...
+  padre.insertBefore(primera, siguiente); // ...y la volvemos a poner en su sitio (se ejecuta connectedCallback otra vez).
+  msg.textContent = "Reinsertada. Haz clic en ella: debe avanzar UN solo estado (un unico evento)."; // Instruccion de la prueba.
+}); // Fin del click.
+log.before(boton); // Colocamos el boton justo encima del log.
+
+// ---------------------------------------------------------------------------
+// TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
+// Resultado: cada clic anade un <li> al log y avisa en #msg.
+// Casos controlados: estado invalido o ausente -> pending (lo hace el componente);
+// reinsertar la insignia no duplica eventos (un clic = una linea en el log);
+// el texto del log se escribe con textContent (nunca como HTML).
+// Prueba: pulsar las 3 insignias 4 veces cada una (ciclo completo: pending ->
+// paid -> shipped -> cancelled -> pending) y repetir tras reinsertar la primera.
+// ---------------------------------------------------------------------------
   </script>
 </body>
 </html>
