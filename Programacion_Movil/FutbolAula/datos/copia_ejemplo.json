@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "marks": [
+    {
+      "id": 1,
+      "favorite": true,
+      "note": "Observación personal de ejemplo"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+test_01_zip_integrity (builtins.DistributionChecks.test_01_zip_integrity) ... ok
+test_02_examples_count (builtins.DistributionChecks.test_02_examples_count) ... ok
+test_03_exercises_count (builtins.DistributionChecks.test_03_exercises_count) ... ok
+test_04_examples_identical (builtins.DistributionChecks.test_04_examples_identical) ... ok
+test_05_only_student_has_todos (builtins.DistributionChecks.test_05_only_student_has_todos) ... ok
+test_06_no_teacher_guide_in_student (builtins.DistributionChecks.test_06_no_teacher_guide_in_student) ... ok
+test_07_documents (builtins.DistributionChecks.test_07_documents) ... ok
+test_08_test_count (builtins.DistributionChecks.test_08_test_count) ... ok
+test_09_instrumentation_count (builtins.DistributionChecks.test_09_instrumentation_count) ... ok
+test_10_manifest (builtins.DistributionChecks.test_10_manifest) ... ok
+test_11_data_json (builtins.DistributionChecks.test_11_data_json) ... ok
+test_12_main_calls_all_exercises (builtins.DistributionChecks.test_12_main_calls_all_exercises) ... ok
+test_13_registry (builtins.DistributionChecks.test_13_registry) ... ok
+test_14_no_duplicate_source_objects (builtins.DistributionChecks.test_14_no_duplicate_source_objects) ... ok
+test_15_core_identical (builtins.DistributionChecks.test_15_core_identical) ... ok
+test_16_no_path_traversal (builtins.DistributionChecks.test_16_no_path_traversal) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.107s
+
+OK

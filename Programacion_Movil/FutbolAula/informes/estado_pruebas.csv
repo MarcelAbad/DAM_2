@@ -1,0 +1,74 @@
+tipo,prueba,estado,motivo
+Estructura ZIP,test_01_zip_integrity,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_02_examples_count,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_03_exercises_count,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_04_examples_identical,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_05_only_student_has_todos,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_06_no_teacher_guide_in_student,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_07_documents,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_08_test_count,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_09_instrumentation_count,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_10_manifest,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_11_data_json,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_12_main_calls_all_exercises,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_13_registry,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_14_no_duplicate_source_objects,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_15_core_identical,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+Estructura ZIP,test_16_no_path_traversal,SUPERADA,Ejecutada con Python unittest; no verifica runtime Kotlin
+JUnit JVM,E01Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E01Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E01Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E02Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E02Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E02Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E03Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E03Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E03Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E04Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E04Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E04Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E05Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E05Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E05Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E06Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E06Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E06Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E07Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E07Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E07Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E08Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E08Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E08Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E09Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E09Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E09Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E10Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E10Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E10Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E11Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E11Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E11Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E12Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E12Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E12Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E13Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E13Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E13Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E14Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E14Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E14Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E15Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E15Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E15Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E16Test.contrato,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E16Test.ejemploResuelto,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,E16Test.casoLimite,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.idsUnicos,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.datosBasicos,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.normalizacion,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.copiaIdaVuelta,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.versionIncorrecta,NO_EJECUTADA,Java/Gradle no disponibles
+JUnit JVM,BaseTest.desconoceId,NO_EJECUTADA,Java/Gradle no disponibles
+Android instrumentada,guardarCerrarReabrirBorrar,NO_EJECUTADA,SDK/emulador no disponibles
+Android instrumentada,restauracionYDatosIndependientes,NO_EJECUTADA,SDK/emulador no disponibles
+Android instrumentada,catalogoVisible,NO_EJECUTADA,SDK/emulador no disponibles
