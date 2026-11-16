@@ -1,6 +1,6 @@
 # Guía de defensa — UMBRA (diseño y accesibilidad)
 
-> Léela en orden. Todo lo marcado como **MEDIDO** lo calculé yo sobre las 15 pantallas exportadas de Figma (`pantallas/` = tu diseño original; `pantallas_accesible/` = versión mejorada). Lo marcado como **HECHO** está aplicado en tu archivo de Figma "**Sin título**" (y también en la copia "Sin título (Copia)"). Lo marcado como **PENDIENTE** no está hecho todavía (ver sección 7).
+> Léela en orden. Todo lo marcado como **MEDIDO** lo calculé yo sobre las 15 pantallas exportadas de Figma (`pantallas/` = tu diseño original; `pantallas_accesible/` = versión mejorada). Lo marcado como **HECHO** está aplicado en tu archivo de Figma "**Sin título**" (comprobado en las capturas de `pantallas_ia/`, que son la versión final). Lo que no se ha llegado a hacer está recogido como **FUTURAS IMPLEMENTACIONES** (secciones 4 y 7).
 
 ---
 
@@ -44,7 +44,7 @@ Hoy el diseño marca la selección con **borde lima, check y el texto "1 selecci
 
 **4. ¿Qué pasa si alguien pulsa "Confirmar mi voto" sin querer?**
 - Ahora mismo: **el voto es definitivo**. Ya hay una protección: primero se **elige** y luego se **confirma** (dos pasos).
-- **PROPUESTA (más seguridad):** al pulsar Confirmar, una hoja inferior pregunta "¿Votar por *Innerbloom*? No podrás cambiarlo" con **Votar** y **Cancelar**. Así un toque accidental no cuenta.
+- ✅ **HECHO (más seguridad):** al pulsar Confirmar, una hoja inferior pregunta "¿Votar por *Innerbloom*?" con el texto "Solo puedes votar una vez y no podrás cambiarlo." y los botones **Votar** y **Cancelar** (pantalla nueva "Confirmar voto"). Así un toque accidental no cuenta.
 
 **5. ¿Qué tamaño de letra mínimo usas y por qué?**
 - Completa este dato con lo que veas en Figma: selecciona el texto más pequeño (por ejemplo "votos" en la clasificación) y mira el tamaño en el panel derecho.
@@ -97,12 +97,12 @@ Norma de referencia: **WCAG 2.2 nivel AA**. Contraste mínimo: **4,5:1** para te
 | 2 | Verde del degradado en su punto más claro (#2C7B53) | Allí solo hay titulares blancos (4,8:1 ✔), pero es el punto más delicado. ✅ **HECHO** (opacidad 20 % → 12 %) | 1.4.3 |
 | 3 | Números de posición "02–06" | 4,0:1 (gris #69746B sobre #0B0D0C). ✅ **HECHO** → 7,78:1 | 1.4.3 |
 | 4 | Botones "Canjear" del perfil | 32 pt de alto (recomendado ≥ 44 pt; mínimo WCAG 2.2: 24 px). ✅ **HECHO** → 44 pt | 2.5.8 Tamaño del objetivo |
-| 5 | Iconos de la barra inferior (Clasificación y Perfil) rotos en varias pantallas | Se ven incompletos (un óvalo y tres rayas sueltas) | 1.1.1 / calidad del diseño |
-| 6 | Contador "Caduca en 01:59" del QR | No se explica cómo ampliarlo | 2.2.1 Tiempo ajustable |
-| 7 | Votar es definitivo con un solo toque de confirmación | Sin cuadro de confirmación | 3.3.4 Prevención de errores |
-| 8 | Sin anotar: estado de foco, orden de lectura, textos alternativos, etiquetas de lector de pantalla | — | 2.4.7, 1.3.1, 4.1.2 |
-| 9 | Solo tema oscuro | No hay tema claro | (mejora, no es fallo AA) |
-| 10 | Mezcla de idiomas: "Check-in", "Coins", "Clubber", "Sessions" | — | 3.1.2 Idioma de las partes |
+| 5 | Iconos de la barra inferior (Clasificación y Perfil) rotos en varias pantallas | Se veían incompletos. ✅ **HECHO**: ahora salen completos en todas las pantallas revisadas | 1.1.1 / calidad del diseño |
+| 6 | Contador "Caduca en 01:59" del QR | No se explicaba cómo ampliarlo. ✅ **HECHO**: botón "Generar otro código" y texto "El código se renueva solo." | 2.2.1 Tiempo ajustable |
+| 7 | Votar es definitivo con un solo toque de confirmación | ✅ **HECHO**: hoja "¿Votar por Innerbloom?" con Votar / Cancelar | 3.3.4 Prevención de errores |
+| 8 | Sin estado de foco | ✅ **HECHO**: marco "Estado de foco" con anillo lima en el botón principal y en una canción. ⏳ **Futuro**: orden de lectura, textos alternativos y etiquetas de lector de pantalla (sección 5, se programan en la app) | 2.4.7, 1.3.1, 4.1.2 |
+| 9 | Solo tema oscuro | ✅ **HECHO en parte**: tema claro en 4 pantallas (Inicio, Selección, Confirmación del voto y Clasificación). ⏳ **Futuro**: el resto | (mejora, no es fallo AA) |
+| 10 | Mezcla de idiomas: "Check-in", "Coins", "Clubber", "Sessions" | ✅ **HECHO en parte**: "Check-in" → "Entrada/Registro de entrada". ⏳ **Futuro**: "Upgrade", "Coins", "Clubber" y "Sessions" siguen en inglés | 3.1.2 Idioma de las partes |
 
 Nota: en el Panel DJ no pude medir los contrastes de "Sin marcar" y "Duración" (las capturas son de otro tamaño). Compruébalos tú en Figma con un plugin de contraste.
 
@@ -110,7 +110,9 @@ Nota: en el Panel DJ no pude medir los contrastes de "Sin marcar" y "Duración" 
 
 ## 4. Mejoras: qué está hecho y qué falta
 
-### ✅ HECHO (aplicado en tu Figma "Sin título" y en la copia; comprobado en las capturas de `pantallas_accesible/`)
+### ✅ HECHO (aplicado en tu Figma "Sin título"; comprobado en las capturas de `pantallas_ia/`)
+
+**Primera tanda (cambios hechos a mano, medidos):**
 
 | # | Cambio | Antes → Después (MEDIDO) |
 |---|---|---|
@@ -119,17 +121,47 @@ Nota: en el Panel DJ no pude medir los contrastes de "Sin marcar" y "Duración" 
 | 3 | Degradado verde del fondo | Opacidad **20 % → 12 %** (fondo algo más oscuro, texto más legible) |
 | 4 | Botones "Canjear" (3) | Alto **32 pt → 44 pt** (tamaño táctil recomendado) |
 
-### ⏳ PENDIENTE (no lo he hecho; está definido para que lo apliques o lo expliques)
+**Segunda tanda (hecha con la IA de Figma; la he revisado sobre las capturas de `pantallas_ia/`):**
 
-| # | Cambio | Qué hacer |
+| # | Cambio | Qué se ve en el diseño |
 |---|---|---|
-| 5 | Barra inferior | Rehacer los iconos **Clasificación** y **Perfil** en las pantallas donde salen incompletos (Votación cerrada, Ya has votado, Sin noche activa, Sin conexión, Check-in, Rangos) con el mismo trazo que en "La noche" |
-| 6 | Caduca en 01:59 | Añadir botón **"Generar otro código"** y texto "El código se renueva solo" |
-| 7 | Confirmar voto | Añadir hoja de confirmación: "¿Votar por Innerbloom? No podrás cambiarlo" → **Votar / Cancelar** |
-| 8 | Foco visible | Añadir estado de foco: anillo lima de 3 pt y 2 pt de separación (WCAG 2.4.7 / 2.4.11) |
-| 9 | Tamaños de texto | Mínimo 12 pt en etiquetas; 14 pt en notas; permitir hasta 200 % |
-| 10 | Idioma | "Check-in" → "Registro de entrada"; "Coins" → "monedas" (o mantener "Frecuencia Coins" como nombre propio) |
-| 11 | Movimiento | En la app: respetar "Reducir movimiento" del sistema |
+| 5 | Barra inferior | Iconos de **Clasificación** y **Perfil** completos y con el mismo trazo en las pantallas revisadas (Check-in, Votación cerrada, Perfil…) |
+| 6 | QR que caduca | En "Canjear recompensa": botón **"Generar otro código"** (borde lima) encima de "Cerrar" y el texto "El código se renueva solo." |
+| 7 | Confirmar voto | Pantalla nueva **"Confirmar voto"**: hoja inferior "¿Votar por Innerbloom?", "Solo puedes votar una vez y no podrás cambiarlo.", botones **Votar** (lima) y **Cancelar** (borde lima) |
+| 8 | Foco visible | Marco nuevo **"Estado de foco"** con anillo lima de 3 pt en el botón "Elegir mi canción" y en una canción seleccionada, y el texto "Estado de foco: visible al navegar con teclado." |
+| 9 | Tamaños de texto | Notas y textos de ayuda claramente más grandes en las pantallas móviles (por ejemplo, el nombre del artista y las notas del pie) |
+| 10 | Idioma | "FRECUENCIA / CHECK-IN" → **"FRECUENCIA / REGISTRO DE ENTRADA"**; "Check-in temprano completado: +Bonus activo" → **"Entrada temprana registrada: bonificación activa"** |
+| 11 | Tema claro (4 pantallas) | Variantes claras de **Inicio, Selección, Confirmación del voto y Clasificación** (fondo #F5F7F0, texto #4A524C, botón principal #2F6B12) |
+
+**Contrastes de lo nuevo (MEDIDO):**
+
+| Elemento | Contraste |
+|---|---|
+| Tema claro: texto gris #4A524C sobre #F5F7F0 | **7,47:1** |
+| Tema claro: texto gris sobre tarjeta blanca | **8,07:1** |
+| Tema claro: texto blanco sobre botón verde #2F6B12 | **6,5:1** |
+| Tema claro: etiqueta verde #2F6B12 sobre #F5F7F0 | **6,02:1** |
+| Hoja de confirmar voto: texto #F5F7F0 sobre #151816 | **16,56:1** |
+| Hoja de confirmar voto: "Cancelar" lima sobre #151816 | **14,96:1** |
+| Números de posición (oscuro) #9DA69E | **7,78:1** |
+| Nota del pie (oscuro) #C9D0CB sobre fondo oscuro | **10,33:1** |
+
+Todo lo medido cumple AA (mínimo 4,5:1).
+
+### ⏳ FUTURAS IMPLEMENTACIONES (no se han llegado a hacer)
+
+| # | Qué falta | Por qué / cómo |
+|---|---|---|
+| A | **Tema claro en el resto de pantallas** (Perfil, Rangos, Check-in, Canjear, estados, Panel DJ) | Solo hay 4 de las 15. Faltan 11 más el Panel DJ |
+| B | **Cambio automático claro/oscuro** | Que la app siga el ajuste del móvil; hoy son diseños separados |
+| C | **Idioma completo** | Siguen en inglés "Upgrade a copa premium", "Coins", "Clubber" y "Sessions" |
+| D | **Panel DJ** | No se han verificado ni ajustado sus tamaños de texto y contrastes ("Sin marcar", "Duración") |
+| E | **Tamaño de texto escalable al 200 %** | Es una regla de programación de la app (Dynamic Type / escala de fuente); en Figma solo se puede indicar |
+| F | **Lector de pantalla** | Orden de lectura, etiquetas y textos alternativos (sección 5): se programan en la app real |
+| G | **"Reducir movimiento"** | Respetar el ajuste del sistema en barras de carga y transiciones |
+| H | **Deshacer el voto durante 10 segundos** | Para errores motrices; es una decisión de negocio (hoy el voto es definitivo) |
+| I | **Estado de foco en todos los componentes** | Se ha mostrado en 2 ejemplos; falta definirlo en el resto (opciones, pestañas, botones secundarios) |
+| J | **Enlazar el flujo en el prototipo** | Que "Elegir mi canción" → "Confirmar voto" → "Voto confirmado" sea navegable (no verificado) |
 
 ---
 
@@ -157,22 +189,24 @@ Orden de lectura y etiquetas, pantalla a pantalla:
 |---|---|
 | ¿Qué es WCAG? | Pautas internacionales de accesibilidad web; el nivel AA es el estándar legal en la UE. |
 | ¿Qué es el contraste y cómo se mide? | La relación de brillo entre texto y fondo. Se mide con una fórmula; AA exige 4,5:1 (texto) y 3:1 (iconos y bordes). |
-| ¿Tu diseño cumple AA? | En su mayor parte sí, **excepto** 10 puntos detectados (sección 3). Tengo propuesta con valores para cada uno. |
+| ¿Tu diseño cumple AA? | Detecté 10 fallos o carencias (sección 3) y he corregido la mayoría: contrastes, botones táctiles, iconos, confirmación del voto, QR, foco e idioma. Lo que queda está en "futuras implementaciones". Lo medido cumple AA. |
 | ¿Por qué no basta el color? | Hay daltonismo y poca luz. Por eso la selección lleva check, borde y texto. |
 | ¿Qué tamaño mínimo de botón? | 44×44 pt recomendado (Apple/Google); 24×24 px es el mínimo de WCAG 2.2. |
 | ¿Cómo lo prueba un ciego? | Con TalkBack (Android) o VoiceOver (iPhone): se navega por el orden de lectura y las etiquetas. |
 | ¿Y una persona mayor? | Texto escalable hasta 200 %, botones grandes, mensajes claros. |
-| ¿Por qué solo tema oscuro? | El contexto de uso es una discoteca; se documenta como decisión y el tema claro sería una mejora futura. |
-| ¿Qué cambiarías con más tiempo? | Confirmación del voto, iconos de la barra, contraste del degradado, foco visible, tema claro. |
+| ¿Por qué hay tema oscuro y claro? | El oscuro es el principal porque el contexto es una discoteca. He añadido un tema claro en 4 pantallas para quien lo prefiera (baja visión, mucha luz). Contrastes medidos entre 6 y 8:1. |
+| ¿Qué cambiarías con más tiempo? | Tema claro en todas las pantallas y en el Panel DJ, idioma completo, deshacer el voto 10 segundos, estado de foco en todos los componentes y programar el lector de pantalla (sección 7). |
 
 ---
 
 ## 7. Estado real (importante, léelo antes de defender)
 
-- ✅ **Hecho:** revisé las 15 pantallas, medí los contrastes y apliqué **4 mejoras** (colores de texto, números de posición, degradado, botones "Canjear") en tu archivo **"Sin título"** de Figma y también en la copia "Sin título (Copia)". Las capturas del antes y el después están en `pantallas/` (original) y `pantallas_accesible/` (mejorado).
-- 🔙 **Cómo volver atrás:** en Figma, menú del archivo → **Mostrar historial de versiones**; ahí puedes recuperar el estado anterior. Las capturas de `pantallas/` guardan el diseño original.
-- ℹ️ Además añadí a los marcos un ajuste de exportación (PNG 2x) para sacar las capturas; no afecta al diseño y puedes quitarlo en el panel Exportar.
-- ⚠️ **PENDIENTE (7 cosas):** iconos rotos de la barra, "Generar otro código" en el QR, hoja de confirmación del voto, estado de foco, tamaños de texto, idioma y tema claro. No están en el Figma; están descritas en la sección 4 y en la 5 (etiquetas de lector de pantalla). Si te da tiempo, hazlas tú siguiendo la tabla; si no, defiéndelas como "mejoras previstas".
+- ✅ **Hecho en tu Figma "Sin título":** 4 mejoras medidas (colores de texto, números de posición, degradado, botones "Canjear") y, con la IA de Figma, las demás: iconos de la barra, "Generar otro código", hoja de confirmar voto, estado de foco, tamaños de texto, idioma ("Check-in") y tema claro en 4 pantallas. Lo he **revisado sobre capturas** (carpeta `pantallas_ia/`).
+- 🖼️ **Carpetas de capturas:** `pantallas/` = diseño original · `pantallas_accesible/` = tras la primera tanda · `pantallas_ia/` = versión final con todo lo nuevo.
+- 🔙 **Cómo volver atrás:** en Figma, menú del archivo → **Mostrar historial de versiones**; ahí puedes recuperar el estado anterior.
+- ℹ️ Además hay un ajuste de exportación (PNG 2x) en los marcos para sacar las capturas; no afecta al diseño.
+- ⏳ **Futuras implementaciones (no hechas):** ver la tabla de la sección 4 (A–J): tema claro en el resto de pantallas, cambio automático claro/oscuro, idioma completo, Panel DJ, texto escalable al 200 %, lector de pantalla, "reducir movimiento", deshacer el voto, foco en todos los componentes y enlazar el prototipo. Preséntalas como **trabajo futuro**: es lo normal en un diseño.
+- ⚠️ **Limitación de mi revisión:** los tamaños de texto los he comprobado **a ojo** sobre las capturas (se ven más grandes), no sé el tamaño exacto en puntos. Mide el más pequeño en Figma (panel Texto) y apúntalo para la pregunta 5.
 - ⚠️ **Dato corregido:** en una versión anterior de esta guía dije que el contraste llegaba a 2,06:1 en el punto más claro del degradado. En ese punto solo hay titulares blancos (4,8:1). El fallo real era el subtítulo gris (3,25:1) y ya está arreglado.
 - ⚠️ **No medí todo:** en el Panel DJ no pude medir "Sin marcar" y "Duración" (la captura tenía otro tamaño). Compruébalos tú con un plugin de contraste.
 - Las respuestas 5–8 de las preguntas que te hice las rellené yo con datos del diseño; **revísalas y cámbialas por tus palabras**, el profesor notará si no las entiendes. La del tamaño de letra (5) es una **estimación**.
