@@ -77,7 +77,7 @@ function capitalizar(texto) { // Recibe el texto ya en minusculas.
 // Convierte lo dictado en un correo de verdad. Paso 4 del enunciado.
 function limpiarEmail(texto) { // Recibe por ejemplo "ana arroba mail punto es".
   return texto // Empezamos con el texto dictado...
-    .replace(/arroba/g, '@') // ...cambiamos la palabra "arroba" por el simbolo @ (la g = todas las veces)...
+    .replace(/\b(a roba|arrobas?)\b/g, '@') // ...cambiamos la palabra "arroba" (o como la oiga Chrome: "a roba", "arrobas") por el simbolo @ (la g = todas las veces)...
     .replace(/punto/g, '.') // ...cambiamos la palabra "punto" por el simbolo . ...
     .replace(/\s+/g, ''); // ...y quitamos TODOS los espacios: "ana @ mail . es" pasa a "ana@mail.es".
 } // Fin de limpiarEmail.
@@ -90,8 +90,11 @@ function procesarFrase(frase) { // Ejemplo de frase: "nombre ana".
   } else if (frase.startsWith('ciudad ')) { // ¿Empieza por "ciudad "?
     inputCiudad.value = capitalizar(frase.slice(7)); // "ciudad " tambien tiene 7 letras, asi que slice(7) otra vez.
     mostrar('Ciudad escrita. Revisala antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
-  } else if (frase.startsWith('email ')) { // ¿Empieza por "email "?
+  } else if (frase.startsWith('email ')) { // ¿Empieza por "email "? (las variantes e-mail, imeil, correo ya se cambiaron a "email" en onresult)
     inputEmail.value = limpiarEmail(frase.slice(6)); // "email " tiene 6 letras: slice(6); despues arroba -> @ y punto -> .
+    mostrar('Correo escrito. Revisalo antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
+  } else if (frase.includes('arroba') || frase.includes('@')) { // Chrome a veces se "come" la palabra email y solo oye "ana arroba gmail.com": si tiene arroba o @, es un correo.
+    inputEmail.value = limpiarEmail(frase); // Aqui NO hay palabra clave delante, asi que limpiamos la frase entera.
     mostrar('Correo escrito. Revisalo antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
   } else if (frase === 'guardar') { // ¿La frase es exactamente "guardar"?
     guardar(); // Si: recogemos los datos y los enviamos al servidor.
@@ -106,7 +109,9 @@ if (oido) { // Solo si existe el reconocedor (si no, no hay nada que programar).
     const frase = evento.results[0][0].transcript // Sacamos el texto de la primera frase entendida...
       .toLowerCase() // ...paso 2: lo pasamos todo a minusculas ("Nombre Ana" -> "nombre ana")...
       .trim() // ...y le quitamos los espacios del principio y del final...
-      .replace(/[.,;:!?]+$/, ''); // ...y los signos finales, porque Chrome a veces anade un punto ("guardar.").
+      .replace(/[.,;:!?]+$/, '') // ...y los signos finales, porque Chrome a veces anade un punto ("guardar.").
+      .replace(/^(e-mail|e mail|imeil|imail|emil|correo|mail|gmail)[\s,:]+/, 'email '); // ...y cambiamos las formas en que Chrome suele oir la palabra "email" (e-mail, imeil, correo...) por "email ".
+    console.log('Voz entendida:', frase); // Truco para depurar: en la consola (F12) se ve exactamente lo que ha oido el navegador.
     procesarFrase(frase); // Con la frase limpia decidimos que campo rellenar.
   }; // Fin de onresult.
   oido.onerror = (evento) => { // Evento onerror: se ejecuta si el microfono o el reconocimiento fallan.
