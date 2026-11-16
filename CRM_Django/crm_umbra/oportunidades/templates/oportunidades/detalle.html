@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>{{ objeto }}</h1>
+{% comment %}
+  Ficha de una oportunidad (plantilla propia de este módulo).
+  Es igual que core/detalle.html, pero añade el botón "Marcar como ganada" (TODO-ALUMNO 8).
+{% endcomment %}
+<table>{% for etiqueta, valor in campos %}<tr><th>{{ etiqueta }}</th><td>{{ valor }}</td></tr>{% endfor %}</table>
+
+{# TODO 8: botón "Marcar como ganada". Es un FORMULARIO con method="post" (la vista solo acepta POST). #}
+{# {% csrf_token %} es OBLIGATORIO en todo formulario POST: es la protección contra ataques CSRF. #}
+{# Solo se muestra si la oportunidad todavía no está ganada. #}
+{% if objeto.etapa != 'ganado' %}
+<form method="post" action="{% url 'oportunidades:ganar' objeto.pk %}" style="margin:16px 0">
+ {% csrf_token %}
+ <button type="submit">✔ Marcar como ganada</button>
+</form>
+{% else %}
+<p class="aviso">✔ Esta oportunidad ya está ganada.</p>
+{% endif %}
+
+<p>
+ <a href="{% url 'oportunidades:editar' objeto.pk %}">Editar</a> ·
+ <a href="{% url 'oportunidades:borrar' objeto.pk %}">Borrar</a> ·
+ <a href="{% url 'oportunidades:index' %}">Volver al listado</a>
+</p>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Noches y eventos</h1>
+{% comment %}
+  Listado de noches (módulo propio, Nivel 4). Variables de la vista: objetos (lista) y q (texto buscado).
+  get_estilo_display = texto visible del estilo | x|default:"—" valor por defecto si está vacío.
+{% endcomment %}
+<form method="get">
+ <input name="q" value="{{ q }}" placeholder="Buscar...">
+ <button>Buscar</button>
+ <a class="btn" href="{% url 'eventos:crear' %}">+ Nueva noche</a>
+</form>
+<table>
+ <tr><th>Noche</th><th>Fecha</th><th>Estilo</th><th>Aforo</th><th>DJ principal</th><th>Votación</th><th>Acciones</th></tr>
+ {% for o in objetos %}
+ <tr><td>{{ o.nombre }}</td><td>{{ o.fecha|date:"d/m/Y" }}</td><td>{{ o.get_estilo_display }}</td><td>{{ o.aforo }}</td>
+  <td>{{ o.dj|default:"—" }}</td><td>{{ o.votacion_abierta|yesno:"Abierta,Cerrada" }}</td>
+  <td><a href="{% url 'eventos:detalle' o.pk %}">Ver</a> ·
+      <a href="{% url 'eventos:editar' o.pk %}">Editar</a> ·
+      <a href="{% url 'eventos:borrar' o.pk %}">Borrar</a></td></tr>
+ {% empty %}<tr><td colspan="7">No hay noches todavía.</td></tr>
+ {% endfor %}
+</table>
+{% endblock %}

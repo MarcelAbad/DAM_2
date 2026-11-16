@@ -1,0 +1,38 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Contactos</h1>
+{% comment %}
+  Plantilla del listado. Variables que envía la vista: objetos (lista), q (texto buscado),
+  tipos (opciones del desplegable) y tipo (opción elegida).
+  for o in objetos ... empty ... endfor : recorre la lista; 'empty' se muestra si no hay datos.
+  o.campo muestra un campo | o.get_campo_display texto visible de un choices
+  fecha|date:"d/m/Y" formatea fecha | texto|truncatechars:60 recorta | x|default:"—" valor por defecto
+  url 'app:nombre' o.pk  genera la URL (nunca escribas rutas a mano)
+  TODO-ALUMNO 6 (HECHO): columnas nuevas = Edad (calculada) y Frecuencia Coins.
+  TODO-ALUMNO 7 (HECHO): desplegable "Todos los tipos" que filtra por tipo de contacto.
+{% endcomment %}
+<form method="get">
+ <input name="q" value="{{ q }}" placeholder="Buscar...">
+ {# Desplegable de tipo. 'selected' deja marcada la opción que se está usando; value="" = sin filtro #}
+ <select name="tipo">
+  <option value="">Todos los tipos</option>
+  {% for valor, texto in tipos %}<option value="{{ valor }}" {% if valor == tipo %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+ </select>
+ <button>Buscar</button>
+ <a class="btn" href="{% url 'contactos:crear' %}">+ Nuevo</a>
+ {# Nivel 3: exportar a CSV. Mantiene la búsqueda y el filtro actuales en la URL (?q=...&tipo=...) #}
+ <a class="btn" href="{% url 'contactos:exportar' %}?q={{ q|urlencode }}&tipo={{ tipo|urlencode }}">⬇ Exportar CSV</a>
+</form>
+<table>
+ <tr><th>Nombre</th><th>Tipo</th><th>Email</th><th>Teléfono</th><th>Edad</th><th>Coins</th><th>Acciones</th></tr>
+ {% for o in objetos %}
+ <tr><td>{{ o.nombre }}</td><td>{{ o.get_tipo_display }}</td><td>{{ o.email }}</td><td>{{ o.telefono }}</td>
+  {# o.edad es una propiedad calculada del modelo; si no hay fecha de nacimiento mostramos "—" #}
+  <td>{{ o.edad|default_if_none:"—" }}</td><td>{{ o.monedas }}</td>
+  <td><a href="{% url 'contactos:detalle' o.pk %}">Ver</a> ·
+      <a href="{% url 'contactos:editar' o.pk %}">Editar</a> ·
+      <a href="{% url 'contactos:borrar' o.pk %}">Borrar</a></td></tr>
+ {% empty %}<tr><td colspan="7">No hay datos todavía.</td></tr>
+ {% endfor %}
+</table>
+{% endblock %}

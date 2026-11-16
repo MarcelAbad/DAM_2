@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Reservas y contratos</h1>
+{% comment %}
+  Plantilla del listado. Variables que envía la vista: objetos (lista), q (texto buscado),
+  etapas (opciones del desplegable), etapa (la elegida) y totales (importe por etapa).
+  for o in objetos ... empty ... endfor : recorre la lista; 'empty' se muestra si no hay datos.
+  o.campo muestra un campo | o.get_campo_display texto visible de un choices
+  fecha|date:"d/m/Y" formatea fecha | texto|truncatechars:60 recorta | x|default:"—" valor por defecto
+  url 'app:nombre' o.pk  genera la URL (nunca escribas rutas a mano)
+  TODO-ALUMNO 6 (HECHO): columna nueva "Fecha prevista".
+  TODO-ALUMNO 7 (HECHO): desplegable de etapa.
+  NIVEL 3 (HECHO): tabla "Importe total por etapa" (viene de la vista, con Sum + values).
+{% endcomment %}
+
+{# NIVEL 3: importe total por etapa #}
+<h2>Importe total por etapa</h2>
+<table>
+ <tr><th>Etapa</th><th>Nº</th><th>Importe total</th></tr>
+ {% for t in totales %}<tr><td>{{ t.etapa }}</td><td>{{ t.n }}</td><td>{{ t.total }} €</td></tr>{% endfor %}
+</table>
+
+<form method="get" style="margin-top:16px">
+ <input name="q" value="{{ q }}" placeholder="Buscar...">
+ {# Desplegable de etapa; 'selected' deja marcada la etapa que se está filtrando #}
+ <select name="etapa">
+  <option value="">Todas las etapas</option>
+  {% for valor, texto in etapas %}<option value="{{ valor }}" {% if valor == etapa %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+ </select>
+ <button>Buscar</button>
+ <a class="btn" href="{% url 'oportunidades:crear' %}">+ Nueva</a>
+</form>
+<table>
+ <tr><th>Título</th><th>Contacto</th><th>Etapa</th><th>Importe</th><th>Fecha prevista</th><th>Acciones</th></tr>
+ {% for o in objetos %}
+ <tr><td>{{ o.titulo }}</td><td>{{ o.contacto }}</td><td>{{ o.get_etapa_display }}</td><td>{{ o.importe }} €</td>
+  <td>{{ o.cierre_previsto|date:"d/m/Y"|default:"—" }}</td>
+  <td><a href="{% url 'oportunidades:detalle' o.pk %}">Ver</a> ·
+      <a href="{% url 'oportunidades:editar' o.pk %}">Editar</a> ·
+      <a href="{% url 'oportunidades:borrar' o.pk %}">Borrar</a></td></tr>
+ {% empty %}<tr><td colspan="6">No hay datos todavía.</td></tr>
+ {% endfor %}
+</table>
+{% endblock %}
