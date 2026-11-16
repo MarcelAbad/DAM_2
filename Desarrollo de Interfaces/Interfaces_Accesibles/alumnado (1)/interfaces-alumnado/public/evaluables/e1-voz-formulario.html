@@ -29,143 +29,156 @@
   <script type="module">
 // ============================================================================
 // E1 - Dictar un cliente por voz
-// Idea general: pulsas "Hablar", dices UNA frase ("nombre Ana"), el navegador la
-// convierte en texto, nosotros la limpiamos, miramos con que palabra empieza
-// y rellenamos el campo que toca. Al decir "guardar" se envia al servidor.
+// Idea general: pulsas "Hablar" y dices UNA frase (por ejemplo "nombre Ana").
+// El navegador convierte la voz en texto, nosotros limpiamos ese texto, miramos
+// con que palabra EMPIEZA (nombre / ciudad / email / guardar) y rellenamos el
+// campo que toca. Al decir "guardar" se envian los datos al servidor con fetch.
+// Esta hecho igual que el resuelto R1 (voz basica) y R2 (voz con datos).
 // ============================================================================
-
-const $ = id => document.getElementById(id); // Atajo: busca un elemento de la pagina por su id.
 
 // ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
-// Aqui solo "cogemos" las piezas de la pagina que vamos a usar.
+// Aqui solo "cogemos" las piezas de la pagina que vamos a necesitar luego.
 // ---------------------------------------------------------------------------
-const msg = $("msg"); // Parrafo donde se muestran los avisos y los errores al usuario.
-const inputNombre = $("name"); // Campo de texto donde se escribe el nombre.
-const inputCiudad = $("city"); // Campo de texto donde se escribe la ciudad.
-const inputEmail = $("email"); // Campo de texto donde se escribe el correo.
-const btnHablar = $("hablar"); // Boton que activa el microfono para una frase.
-const btnGuardar = $("guardar"); // Boton para guardar usando el raton.
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // Reconocimiento de voz (Chrome lo llama webkitSpeechRecognition).
+const msg = document.getElementById('msg'); // Busca el parrafo #msg: ahi escribiremos los avisos y los errores.
+const inputNombre = document.getElementById('name'); // Busca el campo de texto del nombre del cliente.
+const inputCiudad = document.getElementById('city'); // Busca el campo de texto de la ciudad del cliente.
+const inputEmail = document.getElementById('email'); // Busca el campo de texto del correo del cliente.
+const botonHablar = document.getElementById('hablar'); // Busca el boton "Hablar": al pulsarlo se enciende el microfono.
+const botonGuardar = document.getElementById('guardar'); // Busca el boton "Guardar con raton": guarda sin usar la voz.
+document.getElementById('iniciar').hidden = true; // Este ejercicio no usa camara: escondemos el boton "Activar camara" que sobra.
 
-function mostrar(texto, esError = false) { // Escribe un mensaje en pantalla (verde = bien, rojo = error).
-  msg.textContent = texto; // textContent y NO innerHTML: lo que diga el usuario nunca se interpreta como HTML.
-  msg.style.color = esError ? "crimson" : "green"; // Rojo si es un error, verde si todo ha ido bien.
+// El "oido" del navegador: Chrome lo llama webkitSpeechRecognition, otros navegadores SpeechRecognition.
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition; // Usamos el que exista en este navegador.
+let oido = null; // Aqui guardaremos el reconocedor de voz; empieza vacio (null) por si el navegador no tiene voz.
+if (Reconocimiento) { // Si el navegador SI tiene reconocimiento de voz...
+  oido = new Reconocimiento(); // ...creamos el reconocedor (el "oido").
+  oido.lang = 'es-ES'; // Le decimos que escuche en espanol de Espana.
+  oido.continuous = false; // Solo una frase: cuando el usuario calla, el oido se para solo.
+} else { // Si el navegador NO tiene reconocimiento de voz (por ejemplo Firefox)...
+  botonHablar.disabled = true; // ...desactivamos el boton Hablar porque no serviria para nada...
+  msg.textContent = 'Tu navegador no admite voz. Usa Chrome o Edge; mientras tanto puedes escribir y guardar con el raton.'; // ...y explicamos el motivo.
+} // Fin del if/else del reconocimiento.
+
+// Funcion pequena para escribir un aviso en pantalla (verde = bien, rojo = error).
+function mostrar(texto, esError) { // Recibe el texto y un true/false que dice si es un error.
+  msg.textContent = texto; // textContent y NO innerHTML: lo que se diga nunca se interpreta como HTML (seguro).
+  msg.style.color = esError ? 'crimson' : 'green'; // Si es error se pinta en rojo; si no, en verde.
 } // Fin de mostrar.
 
-function capitalizar(texto) { // Pone la primera letra en mayuscula: "ana" -> "Ana".
-  return texto.charAt(0).toUpperCase() + texto.slice(1); // Primera letra en mayuscula + el resto igual.
+// Funcion pequena para poner la primera letra en mayuscula: "ana" -> "Ana".
+function capitalizar(texto) { // Recibe el texto ya en minusculas.
+  return texto.charAt(0).toUpperCase() + texto.slice(1); // Primera letra en mayuscula + el resto sin tocar.
 } // Fin de capitalizar.
-
-function limpiarEmail(texto) { // Convierte lo dictado en un correo de verdad.
-  return texto
-    .replace(/arroba/g, "@") // "ana arroba mail" -> "ana @ mail".
-    .replace(/punto/g, ".") // "mail punto es" -> "mail . es".
-    .replace(/\s+/g, ""); // Quita TODOS los espacios: "ana @ mail . es" -> "ana@mail.es".
-} // Fin de limpiarEmail.
 
 // ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
 // ---------------------------------------------------------------------------
-function procesarFrase(frase) { // Recibe la frase YA limpia y decide que campo rellenar.
-  if (frase.startsWith("nombre ")) { // Paso 2: ¿empieza por "nombre "?
-    inputNombre.value = capitalizar(frase.slice(7)); // slice(7) quita las 7 letras de "nombre " y deja solo el nombre.
-    mostrar("Nombre escrito. Revisalo antes de guardar."); // Avisa de que se ha rellenado.
-  } else if (frase.startsWith("ciudad ")) { // ¿empieza por "ciudad "?
+// Convierte lo dictado en un correo de verdad. Paso 4 del enunciado.
+function limpiarEmail(texto) { // Recibe por ejemplo "ana arroba mail punto es".
+  return texto // Empezamos con el texto dictado...
+    .replace(/\b(a roba|arrobas?)\b/g, '@') // ...cambiamos la palabra "arroba" (o como la oiga Chrome: "a roba", "arrobas") por el simbolo @ (la g = todas las veces)...
+    .replace(/punto/g, '.') // ...cambiamos la palabra "punto" por el simbolo . ...
+    .replace(/\s+/g, ''); // ...y quitamos TODOS los espacios: "ana @ mail . es" pasa a "ana@mail.es".
+} // Fin de limpiarEmail.
+
+// Recibe la frase YA limpia y decide que campo rellenar (paso 2 del enunciado).
+function procesarFrase(frase) { // Ejemplo de frase: "nombre ana".
+  if (frase.startsWith('nombre ')) { // startsWith pregunta: ¿la frase EMPIEZA por "nombre "?
+    inputNombre.value = capitalizar(frase.slice(7)); // slice(7) salta las 7 letras de "nombre " y deja solo "ana"; lo guardamos como "Ana".
+    mostrar('Nombre escrito. Revisalo antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
+  } else if (frase.startsWith('ciudad ')) { // ¿Empieza por "ciudad "?
     inputCiudad.value = capitalizar(frase.slice(7)); // "ciudad " tambien tiene 7 letras, asi que slice(7) otra vez.
-    mostrar("Ciudad escrita. Revisala antes de guardar."); // Avisa de que se ha rellenado.
-  } else if (frase.startsWith("email ")) { // ¿empieza por "email "?
-    inputEmail.value = limpiarEmail(frase.slice(6)); // "email " tiene 6 letras: slice(6); despues arroba->@ y punto->.
-    mostrar("Correo escrito. Revisalo antes de guardar."); // Avisa de que se ha rellenado.
-  } else if (frase === "guardar") { // ¿Se ha dicho solo "guardar"?
-    guardar(); // Si: se envian los datos al servidor.
-  } else { // Ninguna palabra clave reconocida.
-    mostrar("No he entendido: \"" + frase + "\". Di nombre..., ciudad..., email... o guardar.", true); // Se muestra lo que oyo para que el usuario entienda el fallo.
-  } // Fin del if.
+    mostrar('Ciudad escrita. Revisala antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
+  } else if (frase.startsWith('email ')) { // ¿Empieza por "email "? (las variantes e-mail, imeil, correo ya se cambiaron a "email" en onresult)
+    inputEmail.value = limpiarEmail(frase.slice(6)); // "email " tiene 6 letras: slice(6); despues arroba -> @ y punto -> .
+    mostrar('Correo escrito. Revisalo antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
+  } else if (frase.includes('arroba') || frase.includes('@')) { // Chrome a veces se "come" la palabra email y solo oye "ana arroba gmail.com": si tiene arroba o @, es un correo.
+    inputEmail.value = limpiarEmail(frase); // Aqui NO hay palabra clave delante, asi que limpiamos la frase entera.
+    mostrar('Correo escrito. Revisalo antes de guardar.', false); // Avisamos de que se ha rellenado el campo.
+  } else if (frase === 'guardar') { // ¿La frase es exactamente "guardar"?
+    guardar(); // Si: recogemos los datos y los enviamos al servidor.
+  } else { // Si no es ninguna de las palabras clave...
+    mostrar('No he entendido: "' + frase + '". Di nombre..., ciudad..., email... o guardar.', true); // ...enseñamos lo que oyo para que se entienda el fallo.
+  } // Fin del if/else if.
 } // Fin de procesarFrase.
 
-function escuchar() { // Se ejecuta al pulsar Hablar: escucha UNA sola frase.
-  if (!SpeechRecognition) { // Navegador sin reconocimiento de voz (Firefox, Safari antiguo...).
-    mostrar("Tu navegador no admite reconocimiento de voz. Prueba con Chrome o Edge.", true); // Explicamos el problema.
-    return; // No seguimos: no hay microfono que activar.
-  } // Fin del if.
-  const rec = new SpeechRecognition(); // Creamos un "oido" nuevo para esta frase.
-  rec.lang = "es-ES"; // Escucha en espanol de Espana.
-  rec.continuous = false; // Una frase y se para solo.
-  rec.interimResults = false; // Solo el resultado final, no los intentos intermedios.
-  rec.onstart = () => { // Cuando el microfono empieza a escuchar...
-    btnHablar.disabled = true; // ...desactivamos Hablar para no lanzar dos escuchas a la vez...
-    mostrar("Escuchando... di una frase."); // ...y avisamos al usuario.
-  }; // Fin de onstart.
-  rec.onresult = (evento) => { // Cuando el navegador ya ha entendido la frase...
-    const frase = evento.results[0][0].transcript // Texto que ha entendido el navegador.
-      .toLowerCase() // Paso 2 del enunciado: todo en minusculas ("Nombre Ana" -> "nombre ana")...
-      .trim() // ...y sin espacios al principio ni al final.
-      .replace(/[.,;:!?]+$/, "") // Quita signos finales: Chrome a veces anade un punto ("guardar." o "ana@mail.es.").
-      .replace(/^(e-mail|imeil|correo) /, "email "); // Acepta variantes que Chrome oye como "email": e-mail, imeil, correo.
-    procesarFrase(frase); // Decide que campo rellenar con la frase limpia.
+// Evento onresult: se ejecuta cuando el navegador YA ha entendido lo que dijiste.
+if (oido) { // Solo si existe el reconocedor (si no, no hay nada que programar).
+  oido.onresult = (evento) => { // "evento" trae lo que ha entendido el microfono.
+    const frase = evento.results[0][0].transcript // Sacamos el texto de la primera frase entendida...
+      .toLowerCase() // ...paso 2: lo pasamos todo a minusculas ("Nombre Ana" -> "nombre ana")...
+      .trim() // ...y le quitamos los espacios del principio y del final...
+      .replace(/[.,;:!?]+$/, '') // ...y los signos finales, porque Chrome a veces anade un punto ("guardar.").
+      .replace(/^(e-mail|e mail|imeil|imail|emil|correo|mail|gmail)[\s,:]+/, 'email '); // ...y cambiamos las formas en que Chrome suele oir la palabra "email" (e-mail, imeil, correo...) por "email ".
+    console.log('Voz entendida:', frase); // Truco para depurar: en la consola (F12) se ve exactamente lo que ha oido el navegador.
+    procesarFrase(frase); // Con la frase limpia decidimos que campo rellenar.
   }; // Fin de onresult.
-  rec.onerror = (evento) => { // Si falla el microfono o el reconocimiento...
-    if (evento.error === "not-allowed" || evento.error === "service-not-allowed") { // ...por permiso denegado...
-      mostrar("Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.", true); // ...explicamos como arreglarlo.
-    } else if (evento.error === "no-speech") { // ...por no oir nada...
-      mostrar("No he oido nada. Pulsa Hablar y prueba otra vez.", true); // ...pedimos repetirlo.
-    } else { // ...o por cualquier otra cosa...
-      mostrar("Error de voz: " + evento.error, true); // ...mostramos el codigo del error.
-    } // Fin del if.
+  oido.onerror = (evento) => { // Evento onerror: se ejecuta si el microfono o el reconocimiento fallan.
+    if (evento.error === 'not-allowed' || evento.error === 'service-not-allowed') { // Si el usuario nego el permiso del microfono...
+      mostrar('Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.', true); // ...le explicamos como arreglarlo.
+    } else if (evento.error === 'no-speech') { // Si no se oyo nada...
+      mostrar('No he oido nada. Pulsa Hablar y prueba otra vez.', true); // ...le pedimos que lo repita.
+    } else { // Para cualquier otro fallo...
+      mostrar('Error de voz: ' + evento.error, true); // ...mostramos el codigo del error tal cual.
+    } // Fin del if de errores.
   }; // Fin de onerror.
-  rec.onend = () => { // Al terminar (bien o mal)...
-    btnHablar.disabled = false; // ...volvemos a activar Hablar (hay que pulsarlo antes de CADA frase).
+  oido.onend = () => { // Evento onend: se ejecuta al terminar de escuchar, haya ido bien o mal.
+    botonHablar.disabled = false; // Volvemos a activar el boton: hay que pulsar Hablar antes de CADA frase.
   }; // Fin de onend.
-  try { // start() puede lanzar excepcion (por ejemplo si ya estaba escuchando).
-    rec.start(); // Arranca el microfono; la primera vez el navegador pide permiso.
-  } catch (error) { // Si falla...
-    btnHablar.disabled = false; // ...no dejamos el boton bloqueado...
-    mostrar("No se pudo iniciar el microfono: " + error.message, true); // ...y lo contamos.
+} // Fin del if (oido).
+
+// Al pulsar Hablar empezamos a escuchar UNA frase (paso 1 del enunciado).
+botonHablar.addEventListener('click', () => { // Cuando se haga clic en Hablar...
+  if (!oido) return; // ...si no hay reconocedor, no hacemos nada.
+  try { // start() puede lanzar un error (por ejemplo si ya estaba escuchando), asi que lo protegemos.
+    botonHablar.disabled = true; // Desactivamos el boton mientras se escucha para no lanzar dos escuchas a la vez.
+    mostrar('Escuchando... di una frase.', false); // Avisamos al usuario de que ya puede hablar.
+    oido.start(); // Enciende el microfono; la primera vez el navegador pide permiso.
+  } catch (error) { // Si start() ha fallado...
+    botonHablar.disabled = false; // ...no dejamos el boton bloqueado...
+    mostrar('No se pudo iniciar el microfono: ' + error.message, true); // ...y contamos el motivo.
   } // Fin del try/catch.
-} // Fin de escuchar.
+}); // Fin del clic de Hablar.
 
+// Guarda el cliente en el servidor (pasos 5 y 6 del enunciado).
 let guardando = false; // Candado: evita enviar dos veces el mismo cliente si se pulsa dos veces seguidas.
-
-async function guardar() { // Paso 5 y 6: recoge, valida y envia.
+async function guardar() { // async porque dentro usamos await (esperar la respuesta del servidor).
   if (guardando) return; // Si ya hay un envio en marcha, no hacemos otro.
-  const name = inputNombre.value.trim(); // Paso 5: recogemos los tres .value (sin espacios sobrantes).
-  const city = inputCiudad.value.trim(); // Ciudad.
-  const email = inputEmail.value.trim(); // Correo.
-
-  if (!name || !city) { // Validacion: nombre y ciudad NO pueden estar vacios.
-    mostrar("El nombre y la ciudad no pueden estar vacios.", true); // Avisamos del error.
-    return; // No se envia nada.
-  } // Fin del if.
+  const name = inputNombre.value.trim(); // Paso 5: recogemos el .value del nombre, sin espacios sobrantes.
+  const city = inputCiudad.value.trim(); // Recogemos el .value de la ciudad.
+  const email = inputEmail.value.trim(); // Recogemos el .value del correo.
+  if (!name || !city) { // Si el nombre o la ciudad estan vacios (texto vacio = false)...
+    mostrar('El nombre y la ciudad no pueden estar vacios.', true); // ...avisamos del error...
+    return; // ...y NO enviamos nada.
+  } // Fin del if de vacios.
   const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); // Formato valido: algo + @ + algo + . + algo, sin espacios.
-  if (!emailValido) { // Si el correo no cumple el formato...
-    mostrar("El correo no es valido. Ejemplo: ana@mail.es", true); // ...avisamos...
-    return; // ...y no se envia nada.
-  } // Fin del if.
-
-  guardando = true; // Cerramos el candado.
-  btnGuardar.disabled = true; // Y desactivamos el boton mientras se envia.
-  try { // Intentamos enviar; si no hay red, salta al catch.
-    const respuesta = await fetch("/api/customers", { // Paso 6: peticion al servidor (espera la respuesta).
-      method: "POST", // POST = crear un registro nuevo.
-      headers: { "Content-Type": "application/json" }, // Avisa al servidor de que el cuerpo es JSON.
-      body: JSON.stringify({ name, city, email }) // Convierte los tres datos en texto JSON.
+  if (!emailValido) { // Si el correo no cumple ese formato...
+    mostrar('El correo no es valido. Ejemplo: ana@mail.es', true); // ...avisamos con un ejemplo...
+    return; // ...y NO enviamos nada.
+  } // Fin del if del correo.
+  guardando = true; // Cerramos el candado: empieza el envio.
+  botonGuardar.disabled = true; // Desactivamos el boton mientras se envia.
+  try { // Intentamos enviar; si no hay red, saltara al catch.
+    const respuesta = await fetch('/api/customers', { // Paso 6: peticion al servidor; await espera la respuesta.
+      method: 'POST', // POST significa "crear un registro nuevo".
+      headers: { 'Content-Type': 'application/json' }, // Avisamos al servidor de que el cuerpo viene en formato JSON.
+      body: JSON.stringify({ name, city, email }) // Convertimos los tres datos en texto JSON para enviarlos.
     }); // Fin del fetch.
     if (!respuesta.ok) { // Comprobamos respuesta.ok: es false con errores 400, 404, 500...
-      mostrar("El servidor respondio con error " + respuesta.status + ". Los datos siguen escritos.", true); // Error visible, sin borrar lo escrito.
+      mostrar('El servidor respondio con error ' + respuesta.status + '. Los datos siguen escritos.', true); // Error visible y SIN borrar lo escrito.
       return; // Salimos (el finally de abajo se ejecuta igualmente).
-    } // Fin del if.
-    mostrar("Cliente guardado: " + name + ", " + city + ", " + email + "."); // Todo bien: confirmamos.
-  } catch (error) { // Error de red (sin conexion, servidor apagado).
-    mostrar("Error de red: no se pudo contactar con el servidor. Tus datos siguen escritos, vuelve a intentarlo.", true); // Error visible y los inputs NO se borran.
+    } // Fin del if de respuesta.ok.
+    mostrar('Cliente guardado: ' + name + ', ' + city + ', ' + email + '.', false); // Todo ha ido bien: lo confirmamos.
+  } catch (error) { // Error de red: sin conexion o servidor apagado.
+    mostrar('Error de red: no se pudo contactar con el servidor. Tus datos siguen escritos, vuelve a intentarlo.', true); // Error visible y los campos NO se borran.
   } finally { // finally se ejecuta SIEMPRE, haya ido bien o mal.
     guardando = false; // Abrimos el candado...
-    btnGuardar.disabled = false; // ...y reactivamos el boton.
+    botonGuardar.disabled = false; // ...y reactivamos el boton.
   } // Fin del try/catch/finally.
 } // Fin de guardar.
 
-btnHablar.addEventListener("click", escuchar); // Al pulsar Hablar se escucha una frase.
-btnGuardar.addEventListener("click", guardar); // Al pulsar Guardar con raton se envian los datos.
+botonGuardar.addEventListener('click', guardar); // Al pulsar "Guardar con raton" se ejecuta la misma funcion guardar.
 
 // ---------------------------------------------------------------------------
 // TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)

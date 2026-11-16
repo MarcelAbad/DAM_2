@@ -28,151 +28,179 @@
 // ============================================================================
 // E7 - Proyecto integrado: lista de pedidos + voz + mano (realidad aumentada 2D)
 // Junta tres cosas ya vistas:
-//   R2 (voz): "pagados" filtra la lista, "todos" la recupera.
+//   R2 (voz): "pagados" filtra la lista y "todos" la recupera.
 //   E5 (componente): cada pedido muestra su <erp-insignia>.
 //   R4 / R7 (mano): una tarjeta HTML sigue a la mano (punto m[9]) y una PINZA
 //                   pasa al siguiente pedido.
 // OJO: es una superposicion 2D anclada a la imagen. NO es WebXR ni seguimiento 3D.
 // ============================================================================
 
-const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
-
 // ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
 // ---------------------------------------------------------------------------
-await import("/componentes/erp-insignia.js"); // Registra <erp-insignia> (hecha en E5).
-const msg = $("msg"); // Parrafo de avisos.
-const video = $("video"); // Video de la camara.
-const zona = $("zona"); // Recuadro de la camara.
-const ar = $("ar"); // Tarjeta que se ancla a la mano.
-const lista = $("lista"); // Contenedor de la lista de pedidos.
+await import('/componentes/erp-insignia.js'); // Registra la etiqueta <erp-insignia> (el componente que hicimos en E5).
+const msg = document.getElementById('msg'); // Busca el parrafo #msg: ahi escribimos avisos y errores.
+const video = document.getElementById('video'); // Busca el video de la camara.
+const zona = document.getElementById('zona'); // Busca el recuadro de la camara.
+const ar = document.getElementById('ar'); // Busca la tarjeta que se ancla a la mano (la "realidad aumentada").
+const lista = document.getElementById('lista'); // Busca el contenedor donde se pinta la lista de pedidos.
+const botonHablar = document.getElementById('hablar'); // Busca el boton Hablar.
 
-let pedidos = []; // Paso 2: lista ORIGINAL (nunca se modifica).
-let visibles = []; // Paso 2: lista que se ensena ahora (todos o filtrados).
-let i = 0; // Paso 2: indice del pedido que muestra la tarjeta.
-let manos = null; // Detector de manos (se crea al activar la camara).
-let pinzaAntes = false; // Si en el fotograma anterior habia pinza.
+let pedidos = []; // Paso 2: lista ORIGINAL de pedidos (nunca se modifica).
+let visibles = []; // Paso 2: lista que se ensena ahora (todos o solo los filtrados).
+let i = 0; // Paso 2: indice del pedido que muestra la tarjeta; empieza en 0.
+let manos = null; // Detector de manos; se crea al activar la camara.
+let pinzaAntes = false; // Recuerda si en el fotograma anterior habia pinza.
 let ultimoFrame = -1; // Para no analizar dos veces el mismo fotograma.
 
-function mostrar(texto, esError = false) { // Escribe un mensaje (verde = bien, rojo = error).
+// Escribe un aviso en pantalla (verde = bien, rojo = error).
+function mostrar(texto, esError) { // Recibe el texto y si es un error.
   msg.textContent = texto; // textContent: nunca se interpreta como HTML.
-  msg.style.color = esError ? "crimson" : "green"; // Rojo si es error.
+  msg.style.color = esError ? 'crimson' : 'green'; // Rojo si es error, verde si no.
 } // Fin de mostrar.
 
-// Paso 3: pintarLista dibuja cliente, total e insignia de cada pedido.
+// Paso 3: pintarLista muestra cliente, total e insignia de cada pedido.
 function pintarLista() { // Pinta la lista "visibles".
-  lista.textContent = ""; // Vaciamos la lista anterior.
+  lista.textContent = ''; // Vaciamos lo que hubiera antes.
   if (visibles.length === 0) { // Si no hay pedidos que mostrar...
-    const p = document.createElement("p"); // ...ponemos un parrafo de aviso.
-    p.textContent = "No hay pedidos que mostrar."; // Texto del aviso.
-    lista.appendChild(p); // Lo metemos en la lista.
-    return; // Nada mas que pintar.
-  } // Fin del if.
-  visibles.forEach(pedido => { // Una fila por pedido.
-    const fila = document.createElement("div"); // Fila.
-    fila.className = "caja"; // Estilo de caja ya existente en el CSS.
-    const texto = document.createElement("span"); // Texto con cliente y total.
-    texto.textContent = pedido.customer + " - " + pedido.total + " EUR "; // textContent: seguro aunque el nombre tenga "<".
-    const insignia = document.createElement("erp-insignia"); // Componente de estado.
-    insignia.estado = pedido.status; // Su estado (pending, paid...).
-    insignia.inert = true; // Aqui solo informa: no se puede pulsar (si no, cambiaria solo en pantalla y no en el servidor).
-    fila.append(texto, insignia); // Metemos texto e insignia en la fila.
-    lista.appendChild(fila); // Fila a la lista.
+    const p = document.createElement('p'); // ...creamos un parrafo de aviso...
+    p.textContent = 'No hay pedidos que mostrar.'; // ...con su texto...
+    lista.appendChild(p); // ...lo metemos en la lista...
+    return; // ...y no hay nada mas que pintar.
+  } // Fin del if de lista vacia.
+  visibles.forEach((pedido) => { // Una fila por cada pedido visible.
+    const fila = document.createElement('div'); // Creamos la fila.
+    fila.className = 'caja'; // Le damos el estilo de caja que ya existe en el CSS.
+    const texto = document.createElement('span'); // Creamos el texto con cliente y total.
+    texto.textContent = pedido.customer + ' - ' + pedido.total + ' EUR '; // textContent: seguro aunque el nombre tenga "<".
+    const insignia = document.createElement('erp-insignia'); // Creamos el componente de estado.
+    insignia.estado = pedido.status; // Le damos el estado del pedido (pending, paid...).
+    insignia.inert = true; // Aqui solo informa: no se puede pulsar (si no, cambiaria en pantalla pero no en el servidor).
+    fila.append(texto, insignia); // Metemos el texto y la insignia en la fila.
+    lista.appendChild(fila); // Metemos la fila en la lista.
   }); // Fin del forEach.
 } // Fin de pintarLista.
 
-async function cargar() { // Paso 2: carga los pedidos del servidor.
+// Paso 2: carga /api/orders y deja las dos listas preparadas.
+async function cargar() { // async porque esperamos al servidor.
   try { // Puede fallar la red o el servidor.
-    pedidos = await Ayudas.pedir("/api/orders"); // Pide /api/orders (lanza error si no es ok).
+    const respuesta = await fetch('/api/orders'); // Pedimos los pedidos.
+    if (!respuesta.ok) throw new Error('Error HTTP ' + respuesta.status); // Si el servidor responde mal, es un fallo.
+    pedidos = await respuesta.json(); // Convertimos el JSON en una lista de objetos.
     visibles = pedidos; // Al principio se ven todos.
     i = 0; // Empezamos por el primero.
-    pintarLista(); // Pintamos.
-    mostrar("Pedidos cargados: " + pedidos.length + "."); // Resultado.
+    pintarLista(); // Pintamos la lista.
+    mostrar('Pedidos cargados: ' + pedidos.length + '.', false); // Confirmamos al usuario.
   } catch (error) { // Error de red o HTTP.
-    mostrar("No se pudieron cargar los pedidos: " + error.message, true); // Error visible.
+    mostrar('No se pudieron cargar los pedidos: ' + error.message, true); // Error visible.
   } // Fin del try/catch.
 } // Fin de cargar.
 
 // ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
 // ---------------------------------------------------------------------------
-// Paso 4: voz. "pagados" filtra; "todos" recupera.
-function ejecutarOrden(texto) { // Recibe la frase del microfono.
-  const frase = texto.toLowerCase().trim().replace(/[.,;:!?]+$/, ""); // Minusculas, sin espacios ni punto final.
-  if (frase === "pagados") { // Filtro.
-    visibles = pedidos.filter(p => p.status === "paid"); // Nueva lista solo con los pagados (el original no cambia).
-  } else if (frase === "todos") { // Recuperar.
-    visibles = pedidos; // Volvemos a la lista original.
-  } else { // Otra frase.
-    mostrar("No he entendido: \"" + frase + "\". Di pagados o todos.", true); // Aviso.
-    return; // No tocamos nada.
-  } // Fin del if.
-  i = 0; // Paso 4: reiniciar el indice tras filtrar (si no, podria apuntar fuera de la lista).
-  pintarLista(); // Repintamos la lista.
-  mostrar(visibles.length === 0 ? "Sin resultados." : "Mostrando " + visibles.length + " pedido(s).", visibles.length === 0); // Resultado.
-} // Fin de ejecutarOrden.
+// Paso 4: voz. "pagados" filtra la lista; "todos" la recupera.
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition; // El "oido" del navegador (con o sin prefijo webkit).
+if (!Reconocimiento) { // Si el navegador no sabe reconocer voz...
+  botonHablar.disabled = true; // ...desactivamos el boton...
+  mostrar('Tu navegador no admite voz. Usa Chrome o Edge.', true); // ...y avisamos.
+} else { // Si si sabe, lo preparamos.
+  const oido = new Reconocimiento(); // Creamos el reconocedor.
+  oido.lang = 'es-ES'; // Espanol de Espana.
+  oido.onresult = (e) => { // Cuando entiende una frase...
+    const frase = e.results[0][0].transcript.toLowerCase().trim().replace(/[.,;:!?]+$/, ''); // ...la pasamos a minusculas, sin espacios ni punto final.
+    if (frase === 'pagados') { // Si dijo "pagados"...
+      visibles = pedidos.filter((p) => p.status === 'paid'); // ...nueva lista solo con los pagados (la original no cambia).
+    } else if (frase === 'todos') { // Si dijo "todos"...
+      visibles = pedidos; // ...volvemos a la lista original.
+    } else { // Si dijo otra cosa...
+      mostrar('No he entendido: "' + frase + '". Di pagados o todos.', true); // ...avisamos...
+      return; // ...y no tocamos nada.
+    } // Fin del if/else if.
+    i = 0; // Paso 4: reiniciamos el indice tras filtrar (si no, podria apuntar fuera de la lista).
+    pintarLista(); // Repintamos la lista con el filtro nuevo.
+    mostrar(visibles.length === 0 ? 'Sin resultados.' : 'Mostrando ' + visibles.length + ' pedido(s).', visibles.length === 0); // Resultado (rojo si no hay ninguno).
+  }; // Fin de onresult.
+  oido.onerror = (e) => { // Si falla el microfono...
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') mostrar('Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.', true); // Permiso denegado.
+    else if (e.error === 'no-speech') mostrar('No he oido nada. Pulsa Hablar y prueba otra vez.', true); // Silencio.
+    else mostrar('Error de voz: ' + e.error, true); // Cualquier otro error.
+  }; // Fin de onerror.
+  oido.onend = () => { botonHablar.disabled = false; }; // Al terminar de escuchar, el boton vuelve a estar activo.
+  botonHablar.onclick = () => { // Al pulsar Hablar...
+    try { // ...protegemos start()...
+      botonHablar.disabled = true; // ...bloqueamos el boton mientras escucha...
+      oido.start(); // ...y encendemos el microfono.
+    } catch (error) { // Si start() falla...
+      botonHablar.disabled = false; // ...desbloqueamos el boton...
+      mostrar('No se pudo iniciar el microfono: ' + error.message, true); // ...y contamos el motivo.
+    } // Fin del try/catch.
+  }; // Fin del onclick.
+} // Fin del if/else de Reconocimiento.
 
-Ayudas.voz($("hablar"), ejecutarOrden, msg); // Ayuda del profesor: escucha una frase por pulsacion y gestiona sus errores.
-
-async function prepararManos() { // Descarga MediaPipe solo al activar la camara.
-  const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm"); // Libreria.
-  const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"); // Motor WebAssembly.
-  manos = await HandLandmarker.createFromOptions(vision, { // Detector con estas opciones:
-    baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" }, // Modelo.
-    runningMode: "VIDEO", // Analiza video.
-    numHands: 1 // Una mano.
+// Herramienta de manos: se descarga SOLO al activar la camara.
+async function prepararManos() { // async porque descarga cosas de Internet.
+  const { HandLandmarker, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm'); // Libreria.
+  const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'); // Motor WebAssembly.
+  manos = await HandLandmarker.createFromOptions(vision, { // Creamos el detector con estas opciones:
+    baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task' }, // Modelo de IA.
+    runningMode: 'VIDEO', // Analiza video.
+    numHands: 1 // Una sola mano.
   }); // Fin de createFromOptions.
 } // Fin de prepararManos.
 
-function ocultarTarjeta() { // Paso 7: esconde la tarjeta y resetea la pinza.
+// Paso 7: esconde la tarjeta y resetea la pinza.
+function ocultarTarjeta() { // Se usa cuando no hay mano o no hay pedidos.
   ar.hidden = true; // Tarjeta oculta.
-  pinzaAntes = false; // Reseteo: al volver la mano no cuenta como pinza nueva.
+  pinzaAntes = false; // Reseteo: cuando vuelva la mano no cuenta como pinza nueva.
 } // Fin de ocultarTarjeta.
 
-function bucle() { // Se repite en cada fotograma.
-  if (video.currentTime === ultimoFrame) { // Fotograma repetido...
+// bucle() se repite en cada fotograma de la camara.
+function bucle() { // Se llama a si misma al final con requestAnimationFrame.
+  if (video.currentTime === ultimoFrame) { // Si es el mismo fotograma que antes...
     requestAnimationFrame(bucle); // ...esperamos al siguiente...
     return; // ...sin analizar.
   } // Fin del if.
-  ultimoFrame = video.currentTime; // Apuntamos el fotograma.
-  const resultado = manos.detectForVideo(video, performance.now()); // Buscamos la mano.
-  if (resultado.landmarks.length === 0 || visibles.length === 0) { // Paso 7: sin mano O sin pedidos...
+  ultimoFrame = video.currentTime; // Apuntamos el fotograma que analizamos.
+  const r = manos.detectForVideo(video, performance.now()); // Buscamos la mano en este fotograma.
+  if (r.landmarks.length === 0 || visibles.length === 0) { // Paso 7: si no hay mano O no hay pedidos...
     ocultarTarjeta(); // ...escondemos la tarjeta (y NO accedemos a una lista vacia).
-  } else { // Hay mano y hay pedidos.
-    const m = resultado.landmarks[0]; // Los 21 puntos de la mano.
+  } else { // Si hay mano y hay pedidos...
+    const m = r.landmarks[0]; // Los 21 puntos de la mano.
     const caja = zona.getBoundingClientRect(); // Tamano del recuadro.
-    ar.style.left = (1 - m[9].x) * caja.width + "px"; // Paso 5: m[9] = centro de la mano. "1 -" por el espejo.
-    ar.style.top = m[9].y * caja.height + "px"; // Posicion vertical.
+    ar.style.left = (1 - m[9].x) * caja.width + 'px'; // Paso 5: m[9] es el centro de la mano; el "1 -" compensa el espejo.
+    ar.style.top = m[9].y * caja.height + 'px'; // Posicion vertical de la tarjeta.
     const pinza = Math.hypot(m[8].x - m[4].x, m[8].y - m[4].y) < 0.05; // Indice y pulgar juntos = pinza.
-    if (pinza && !pinzaAntes) i++; // Paso 6: solo al pasar de abierta a cerrada, avanza el indice (antes de pintar, para verlo al instante).
+    if (pinza && !pinzaAntes) i++; // Paso 6: solo al pasar de abierta a cerrada avanzamos el indice.
     pinzaAntes = pinza; // Recordamos para el siguiente fotograma.
-    const pedido = visibles[i % visibles.length]; // Paso 6: el modulo evita salirnos de la lista (i crece, pero % lo mantiene en rango).
-    ar.textContent = pedido.customer + " - " + pedido.total + " EUR - " + pedido.status; // Texto seguro de la tarjeta.
+    const pedido = visibles[i % visibles.length]; // Paso 6: el modulo mantiene el indice dentro de la lista aunque i siga creciendo.
+    ar.textContent = pedido.customer + ' - ' + pedido.total + ' EUR - ' + pedido.status; // Texto de la tarjeta (textContent = seguro).
     ar.hidden = false; // Mostramos la tarjeta.
-  } // Fin del if.
-  requestAnimationFrame(bucle); // Repetimos.
+  } // Fin del if/else.
+  requestAnimationFrame(bucle); // Repetimos en el siguiente fotograma.
 } // Fin de bucle.
 
-async function iniciar() { // Paso 5: al pulsar "Activar camara".
-  $("iniciar").disabled = true; // Evita dos bucles a la vez.
+// Paso 5: al pulsar "Activar camara".
+async function iniciar() { // async porque esperamos descargas y la camara.
+  document.getElementById('iniciar').disabled = true; // Evita arrancar dos bucles a la vez.
   try { // Puede fallar: MediaPipe, camara denegada...
-    mostrar("Cargando detector de manos..."); // Aviso.
+    mostrar('Cargando detector de manos...', false); // Aviso: tarda unos segundos.
     await prepararManos(); // Preparamos MediaPipe.
-    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Permiso de camara.
+    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Pedimos permiso y abrimos la camara.
     video.srcObject = flujo; // Conectamos camara y video.
-    await video.play(); // Encendemos.
-    window.addEventListener("pagehide", () => flujo.getTracks().forEach(t => t.stop()), { once: true }); // Libera la camara al salir.
-    mostrar("Camara activa. Ensena la mano; junta indice y pulgar para pasar de pedido."); // Instruccion.
-    bucle(); // Empezamos.
-  } catch (error) { // Cualquier fallo.
-    $("iniciar").disabled = false; // Permitimos reintentar.
-    if (error.name === "NotAllowedError") mostrar("Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.", true); // Permiso denegado.
-    else if (error.name === "NotFoundError") mostrar("No se ha encontrado ninguna camara.", true); // Sin camara.
-    else mostrar("No se pudo iniciar: " + error.message, true); // Otro fallo.
+    await video.play(); // Encendemos el video.
+    window.addEventListener('pagehide', () => flujo.getTracks().forEach((t) => t.stop()), { once: true }); // Al salir de la pagina apagamos la camara.
+    mostrar('Camara activa. Ensena la mano; junta indice y pulgar para pasar de pedido.', false); // Instrucciones.
+    bucle(); // Empezamos a vigilar la mano.
+  } catch (error) { // Cualquier fallo de arriba.
+    document.getElementById('iniciar').disabled = false; // Permitimos reintentar.
+    if (error.name === 'NotAllowedError') mostrar('Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.', true); // Permiso denegado.
+    else if (error.name === 'NotFoundError') mostrar('No se ha encontrado ninguna camara.', true); // Sin camara.
+    else mostrar('No se pudo iniciar: ' + error.message, true); // Otro fallo.
   } // Fin del try/catch.
 } // Fin de iniciar.
 
-$("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa la camara.
+document.getElementById('iniciar').addEventListener('click', iniciar); // Al pulsar el boton se activa la camara.
 
 // ---------------------------------------------------------------------------
 // TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
@@ -182,7 +210,7 @@ $("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa
 // que desaparece (tarjeta oculta y pinza reseteada).
 // Recordatorio: es una superposicion 2D anclada, no WebXR ni seguimiento 3D.
 // ---------------------------------------------------------------------------
-cargar(); // Arranca la carga de pedidos.
+cargar(); // Arrancamos la carga de pedidos nada mas abrir la pagina.
   </script>
 </body>
 </html>

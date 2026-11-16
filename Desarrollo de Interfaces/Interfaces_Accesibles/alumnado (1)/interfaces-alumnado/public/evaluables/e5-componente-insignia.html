@@ -27,46 +27,47 @@
   <script type="module">
 // ============================================================================
 // E5 - Probar el componente <erp-insignia>
-// El componente (public/componentes/erp-insignia.js) ya hace el trabajo: aqui
-// solo lo cargamos y escuchamos su evento propio "cambio" para anotarlo en un log.
+// El componente (public/componentes/erp-insignia.js) hace el trabajo de dibujar y
+// cambiar de estado. Esta pagina solo lo carga y escucha su evento propio
+// "cambio" para anotarlo en un log (una lista).
+// Esta hecho igual que el resuelto R5 (componente propio con evento propio).
 // ============================================================================
-
-const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
 
 // ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
 // ---------------------------------------------------------------------------
-await import("/componentes/erp-insignia.js"); // Carga el componente: registra la etiqueta <erp-insignia>.
-const log = $("log"); // Lista <ul> donde se anotan los cambios.
-const msg = $("msg"); // Parrafo de avisos.
-$("hablar").hidden = true; // Este ejercicio no usa voz: escondemos el boton sobrante.
-$("iniciar").hidden = true; // Ni camara: escondemos el otro boton sobrante.
+await import('/componentes/erp-insignia.js'); // Carga el componente: esto ejecuta customElements.define y registra la etiqueta <erp-insignia>.
+const log = document.getElementById('log'); // Busca la lista <ul> donde anotaremos cada cambio.
+const msg = document.getElementById('msg'); // Busca el parrafo #msg (aria-live): los lectores de pantalla lo leen en voz alta.
+document.getElementById('hablar').hidden = true; // Este ejercicio no usa voz: escondemos el boton que sobra.
+document.getElementById('iniciar').hidden = true; // Ni camara: escondemos el otro boton que sobra.
 
 // ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
 // ---------------------------------------------------------------------------
-// Paso 7: escuchamos "cambio" en el document. Funciona para las 3 insignias porque el
-// evento lleva bubbles:true (sube hasta aqui) y composed:true (atraviesa el Shadow DOM).
-document.addEventListener("cambio", (evento) => { // Se ejecuta cada vez que una insignia cambia de estado.
-  const insignias = [...document.querySelectorAll("erp-insignia")]; // Todas las insignias de la pagina, en orden.
-  const numero = insignias.indexOf(evento.target) + 1; // Que insignia ha sido (1, 2 o 3). evento.target es la propia etiqueta.
-  const li = document.createElement("li"); // Nueva linea de lista.
-  li.textContent = "Insignia " + numero + " -> " + evento.detail.estado; // textContent: texto seguro. detail.estado = nuevo valor.
-  log.appendChild(li); // La anadimos al log.
-  msg.textContent = "Ultimo cambio: insignia " + numero + " ahora es " + evento.detail.estado + "."; // Aviso para lectores de pantalla (aria-live).
-}); // Fin del listener.
+// Paso 7: escuchamos "cambio" en document. Sirve para las 3 insignias a la vez porque
+// el evento lleva bubbles:true (sube por la pagina hasta aqui) y composed:true
+// (atraviesa el Shadow DOM, que es la "caja cerrada" interna del componente).
+document.addEventListener('cambio', (evento) => { // Se ejecuta cada vez que cualquier insignia cambia de estado.
+  const insignias = [...document.querySelectorAll('erp-insignia')]; // Lista con todas las insignias de la pagina, en orden.
+  const numero = insignias.indexOf(evento.target) + 1; // Que insignia ha sido (1, 2 o 3); evento.target es la propia etiqueta; +1 porque se cuenta desde 0.
+  const li = document.createElement('li'); // Creamos una linea nueva de lista.
+  li.textContent = 'Insignia ' + numero + ' -> ' + evento.detail.estado; // Escribimos con textContent (texto seguro); detail.estado trae el nuevo valor.
+  log.appendChild(li); // Anadimos la linea al final del log.
+  msg.textContent = 'Ultimo cambio: insignia ' + numero + ' ahora es ' + evento.detail.estado + '.'; // Aviso para lectores de pantalla.
+}); // Fin del listener de cambio.
 
-// Boton extra para la prueba "quitar y volver a insertar una insignia".
-const primera = document.querySelector("erp-insignia"); // La primera insignia.
-const boton = document.createElement("button"); // Boton nuevo.
-boton.textContent = "Quitar y volver a insertar la primera"; // Su texto.
-boton.addEventListener("click", () => { // Al pulsarlo...
-  const padre = primera.parentNode; // ...guardamos donde estaba...
-  const siguiente = primera.nextSibling; // ...y que elemento tenia detras...
-  primera.remove(); // ...la quitamos de la pagina (se ejecuta disconnectedCallback)...
+// Boton extra para la prueba que pide el paso 7: "quitar y volver a insertar una".
+const primera = document.querySelector('erp-insignia'); // La primera insignia de la pagina.
+const boton = document.createElement('button'); // Creamos un boton nuevo.
+boton.textContent = 'Quitar y volver a insertar la primera'; // Le ponemos su texto.
+boton.addEventListener('click', () => { // Al pulsarlo...
+  const padre = primera.parentNode; // ...recordamos en que contenedor estaba la insignia...
+  const siguiente = primera.nextSibling; // ...y que elemento tenia justo detras...
+  primera.remove(); // ...la quitamos de la pagina (se ejecuta disconnectedCallback del componente)...
   padre.insertBefore(primera, siguiente); // ...y la volvemos a poner en su sitio (se ejecuta connectedCallback otra vez).
-  msg.textContent = "Reinsertada. Haz clic en ella: debe avanzar UN solo estado (un unico evento)."; // Instruccion de la prueba.
-}); // Fin del click.
+  msg.textContent = 'Reinsertada. Haz clic en ella: debe avanzar UN solo estado (un unico evento).'; // Explicamos que hay que comprobar.
+}); // Fin del clic del boton extra.
 log.before(boton); // Colocamos el boton justo encima del log.
 
 // ---------------------------------------------------------------------------
