@@ -1,6 +1,6 @@
 # Guía de defensa — UMBRA (diseño y accesibilidad)
 
-> Léela en orden. Todo lo marcado como **MEDIDO** lo calculé yo sobre las 15 pantallas exportadas de Figma (`pantallas/` = tu diseño original; `pantallas_accesible/` = versión mejorada). Lo marcado como **HECHO** está aplicado en la copia de Figma "**Sin título (Copia)**". Lo marcado como **PENDIENTE** no está hecho todavía (ver sección 7).
+> Léela en orden. Todo lo marcado como **MEDIDO** lo calculé yo sobre las 15 pantallas exportadas de Figma (`pantallas/` = tu diseño original; `pantallas_accesible/` = versión mejorada). Lo marcado como **HECHO** está aplicado en tu archivo de Figma "**Sin título**" (y también en la copia "Sin título (Copia)"). Lo marcado como **PENDIENTE** no está hecho todavía (ver sección 7).
 
 ---
 
@@ -110,7 +110,7 @@ Nota: en el Panel DJ no pude medir los contrastes de "Sin marcar" y "Duración" 
 
 ## 4. Mejoras: qué está hecho y qué falta
 
-### ✅ HECHO (aplicado en la copia "Sin título (Copia)" y comprobado en las capturas de `pantallas_accesible/`)
+### ✅ HECHO (aplicado en tu Figma "Sin título" y en la copia; comprobado en las capturas de `pantallas_accesible/`)
 
 | # | Cambio | Antes → Después (MEDIDO) |
 |---|---|---|
@@ -169,8 +169,9 @@ Orden de lectura y etiquetas, pantalla a pantalla:
 
 ## 7. Estado real (importante, léelo antes de defender)
 
-- ✅ **Hecho:** revisé las 15 pantallas, medí los contrastes y apliqué **4 mejoras** (colores de texto, números de posición, degradado, botones "Canjear") en una **copia** de tu Figma llamada **"Sin título (Copia)"**. Las capturas del antes y el después están en `pantallas/` y `pantallas_accesible/`.
-- 🛡️ **Tu archivo original "Sin título" se conserva con el diseño intacto.** Lo único que cambié en él fue añadir un ajuste de exportación (PNG 2x) a los marcos para poder sacar las capturas; no afecta al diseño y puedes quitarlo en el panel Exportar.
+- ✅ **Hecho:** revisé las 15 pantallas, medí los contrastes y apliqué **4 mejoras** (colores de texto, números de posición, degradado, botones "Canjear") en tu archivo **"Sin título"** de Figma y también en la copia "Sin título (Copia)". Las capturas del antes y el después están en `pantallas/` (original) y `pantallas_accesible/` (mejorado).
+- 🔙 **Cómo volver atrás:** en Figma, menú del archivo → **Mostrar historial de versiones**; ahí puedes recuperar el estado anterior. Las capturas de `pantallas/` guardan el diseño original.
+- ℹ️ Además añadí a los marcos un ajuste de exportación (PNG 2x) para sacar las capturas; no afecta al diseño y puedes quitarlo en el panel Exportar.
 - ⚠️ **PENDIENTE (7 cosas):** iconos rotos de la barra, "Generar otro código" en el QR, hoja de confirmación del voto, estado de foco, tamaños de texto, idioma y tema claro. No están en el Figma; están descritas en la sección 4 y en la 5 (etiquetas de lector de pantalla). Si te da tiempo, hazlas tú siguiendo la tabla; si no, defiéndelas como "mejoras previstas".
 - ⚠️ **Dato corregido:** en una versión anterior de esta guía dije que el contraste llegaba a 2,06:1 en el punto más claro del degradado. En ese punto solo hay titulares blancos (4,8:1). El fallo real era el subtítulo gris (3,25:1) y ya está arreglado.
 - ⚠️ **No medí todo:** en el Panel DJ no pude medir "Sin marcar" y "Duración" (la captura tenía otro tamaño). Compruébalos tú con un plugin de contraste.
