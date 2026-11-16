@@ -1,0 +1,40 @@
+UMBRA CRM - CRM de Django para una discoteca
+============================================
+
+CREDENCIALES
+  Usuario: admin
+  Clave:   admin1234
+  (Se crean solas con el comando cargar_ejemplo)
+
+CÓMO ARRANCAR (en un equipo limpio)
+  Windows:    doble clic en iniciar.bat
+  Linux/Mac:  bash iniciar.sh
+  Después abre http://127.0.0.1:8000/
+  (El script crea el entorno virtual, instala Django, aplica las migraciones y carga los datos de ejemplo.)
+
+PRUEBAS AUTOMÁTICAS
+  python manage.py test      -> 19 pruebas (una por cada tarea del enunciado)
+
+TODOs COMPLETADOS
+  Nivel 1 (obligatorio)
+    [x] TODO 0  settings.py: NOMBRE_CRM='UMBRA CRM', COLOR_PRINCIPAL='#1f5c3d' y TEMATICA.md
+    [x] TODO 1  Tipos de contacto: clubber, VIP, promotor, DJ, proveedor, otro
+    [x] TODO 2  Dos campos propios en Contacto: fecha_nacimiento y monedas (Frecuencia Coins),
+                llevados a formulario, admin, listado y ficha (+ edad calculada)
+    [x] TODO 3  Etapas de oportunidades (5): consulta, presupuesto, reservado, ganado, perdido
+                (el valor 'ganado' se mantiene para que el panel siga sumando bien)
+    [x] TODO 4  Canales nuevos en interacciones: WhatsApp e Instagram
+    [x] TODO 5  Campo prioridad (alta/media/baja) en tareas
+    [x] TODO 10 cargar_ejemplo.py: 12 contactos, 9 reservas/contratos, 6 interacciones, 6 tareas y 3 noches
+  Nivel 2 (obligatorio)
+    [x] TODO 6  Columnas de los 4 listados adaptadas a los campos nuevos
+    [x] TODO 7  Filtro por tipo en contactos y por etapa en oportunidades (desplegable + filter() en la vista)
+                (extra: filtro por prioridad en tareas)
+    [x] TODO 8  Botón "Marcar como ganada" en la ficha de la oportunidad (vista solo POST)
+    [x] TODO 9  Métrica propia en el panel: tareas vencidas (vence__lt=date.today())
+                (extra: Frecuencia Coins en circulación)
+  Nivel 3 (elegidas 2)
+    [x] Importe total por etapa en oportunidades (values('etapa').annotate(Sum('importe')))
+    [x] Exportar contactos a CSV (HttpResponse con content_type='text/csv', respeta búsqueda y filtro)
+  Nivel 4 (opcional)
+    [x] Módulo propio "eventos" (Noches): app creada, estructura copiada de tareas, añadida a MODULOS_CRM y visible en el menú
