@@ -58,13 +58,16 @@ class ErpInsignia extends HTMLElement {            // componente nuevo = clase q
   // TODO 4 (HECHO): dibujar un boton con un color distinto por estado
   pintar() {                                       // dibuja el HTML interno
     const e = ESTADOS_INSIGNIA[this.estado];       // texto y color del estado actual (siempre valido gracias al getter)
+    // Dentro de las comillas invertidas (`) va el HTML interno; ${...} mete una variable de JavaScript en el texto.
+    // CSS de las dos lineas de "button": fondo del color del estado, texto blanco, sin borde, esquinas redondas,
+    // relleno interior, letra en negrita y cursor de mano. Solo afecta a esta insignia (Shadow DOM).
     this.shadowRoot.innerHTML = `
       <style>
         button { background:${e.color}; color:#fff; border:0; border-radius:999px;
                  padding:6px 14px; font:600 .9rem system-ui,sans-serif; cursor:pointer; }
         button:focus-visible { outline:3px solid #000; outline-offset:2px; }
       </style>
-      <button type="button" title="Estado: ${this.estado}. Pulsa para cambiar">${e.texto}</button>`; // <button>: se puede usar con teclado (Tab + Enter)
-  }
-}
-customElements.define('erp-insignia', ErpInsignia); // registra la etiqueta <erp-insignia>
+      <button type="button" title="Estado: ${this.estado}. Pulsa para cambiar">${e.texto}</button>`; // <button>: se puede usar con teclado (Tab + Enter); focus-visible dibuja un borde negro al enfocarlo con Tab.
+  }                                                // fin de pintar()
+}                                                  // fin de la clase ErpInsignia
+customElements.define('erp-insignia', ErpInsignia); // registra la etiqueta <erp-insignia> para poder usarla en cualquier HTML

@@ -27,98 +27,121 @@
   <script type="module">
 // ============================================================================
 // E2 - Filtrar productos por voz
-// Idea: al cargar la pagina pedimos los productos al servidor y los guardamos.
-// Luego, con la voz, decimos "stock bajo", "todos" o "buscar teclado" y la
-// tabla se vuelve a pintar con los productos que cumplen. La lista ORIGINAL
-// nunca se modifica: solo se pinta una parte de ella (filter crea otra lista).
+// Idea general: al cargar la pagina pedimos los productos al servidor y los
+// guardamos en la lista "productos". Despues, con la voz, decimos "stock bajo",
+// "todos" o "buscar teclado" y la tabla se vuelve a pintar con los productos que
+// cumplen. La lista ORIGINAL nunca se modifica: filter() crea una lista nueva.
+// Esta hecho igual que el resuelto R2 (voz + datos del servidor).
 // ============================================================================
-
-const $ = id => document.getElementById(id); // Atajo: busca un elemento de la pagina por su id.
 
 // ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
 // ---------------------------------------------------------------------------
-const msg = $("msg"); // Parrafo donde se muestran los avisos y errores.
-const tabla = $("tabla"); // Tabla donde se pintan los productos.
-$("iniciar").hidden = true; // Este ejercicio no usa camara: escondemos el boton sobrante de la plantilla.
-let productos = []; // Lista ORIGINAL (paso 1). Aqui se guarda la respuesta JSON y no se sustituye al filtrar.
+const msg = document.getElementById('msg'); // Busca el parrafo #msg: ahi escribimos avisos y errores.
+const tabla = document.getElementById('tabla'); // Busca la tabla donde se pintaran los productos.
+const botonHablar = document.getElementById('hablar'); // Busca el boton "Hablar" que enciende el microfono.
+document.getElementById('iniciar').hidden = true; // Este ejercicio no usa camara: escondemos el boton que sobra.
+let productos = []; // Paso 1: lista ORIGINAL de productos; empieza vacia y se rellena al cargar. No se sustituye al filtrar.
 
-function mostrar(texto, esError = false) { // Escribe un mensaje en pantalla (verde = bien, rojo = error).
+// Escribe un aviso en pantalla (verde = bien, rojo = error).
+function mostrar(texto, esError) { // Recibe el texto y si es un error o no.
   msg.textContent = texto; // textContent: el texto nunca se interpreta como HTML.
-  msg.style.color = esError ? "crimson" : "green"; // Rojo si es un error, verde si va bien.
+  msg.style.color = esError ? 'crimson' : 'green'; // Rojo si es error, verde si todo va bien.
 } // Fin de mostrar.
 
-// Paso 2: pintar(lista) dibuja la cabecera y una fila por producto.
-function pintar(lista) { // Recibe la lista que se quiere ensenar (original o filtrada).
-  tabla.textContent = ""; // Vaciamos la tabla antes de pintar (borra lo anterior).
-  const cabecera = document.createElement("tr"); // Fila de cabecera.
-  ["Nombre", "Precio", "Stock"].forEach(titulo => { // Una celda por cada titulo.
-    const th = document.createElement("th"); // Celda de cabecera.
-    th.textContent = titulo; // Texto con textContent (seguro).
-    cabecera.appendChild(th); // La metemos en la fila.
-  }); // Fin del forEach.
+// Paso 2: pintar(lista) dibuja la cabecera Nombre/Precio/Stock y una fila por producto.
+function pintar(lista) { // Recibe la lista que queremos ensenar (la original o una filtrada).
+  tabla.textContent = ''; // Vaciamos la tabla antes de pintar, para no acumular filas viejas.
+  const cabecera = document.createElement('tr'); // Creamos la fila de la cabecera.
+  ['Nombre', 'Precio', 'Stock'].forEach((titulo) => { // Recorremos los tres titulos de columna...
+    const th = document.createElement('th'); // ...creamos una celda de cabecera para cada uno...
+    th.textContent = titulo; // ...con su texto (textContent = seguro)...
+    cabecera.appendChild(th); // ...y la metemos en la fila de cabecera.
+  }); // Fin del forEach de titulos.
   tabla.appendChild(cabecera); // Metemos la cabecera en la tabla.
-  if (lista.length === 0) { // Si no hay ningun producto que mostrar...
-    const fila = document.createElement("tr"); // ...creamos una fila de aviso...
-    const td = document.createElement("td"); // ...con una sola celda...
-    td.colSpan = 3; // ...que ocupa las 3 columnas...
-    td.textContent = "Sin coincidencias"; // ...con el texto que pide el enunciado.
-    fila.appendChild(td); // La metemos en la fila...
-    tabla.appendChild(fila); // ...y en la tabla.
-    mostrar("Sin coincidencias", true); // Tambien se avisa en el mensaje.
-    return; // No hay mas que pintar.
-  } // Fin del if.
-  lista.forEach(p => { // Una fila por cada producto.
-    const fila = document.createElement("tr"); // Fila nueva.
-    [p.name, p.price, p.stock].forEach(dato => { // Las tres celdas: nombre, precio y stock.
-      const td = document.createElement("td"); // Celda nueva.
-      td.textContent = dato; // textContent evita que un nombre con "<" rompa la pagina.
-      fila.appendChild(td); // La metemos en la fila.
-    }); // Fin del forEach de celdas.
-    tabla.appendChild(fila); // La fila entra en la tabla.
-  }); // Fin del forEach de filas.
-  mostrar("Mostrando " + lista.length + " de " + productos.length + " productos."); // Resumen para el usuario.
+  if (lista.length === 0) { // Si la lista esta vacia (nadie cumple el filtro)...
+    const fila = document.createElement('tr'); // ...creamos una fila de aviso...
+    const celda = document.createElement('td'); // ...con una sola celda...
+    celda.colSpan = 3; // ...que ocupa las tres columnas...
+    celda.textContent = 'Sin coincidencias'; // ...con el texto que pide el enunciado...
+    fila.appendChild(celda); // ...la metemos en la fila...
+    tabla.appendChild(fila); // ...y la fila en la tabla.
+    mostrar('Sin coincidencias', true); // Tambien lo decimos en el parrafo de avisos.
+    return; // No hay nada mas que pintar, salimos de la funcion.
+  } // Fin del if de lista vacia.
+  lista.forEach((p) => { // Para cada producto de la lista...
+    const fila = document.createElement('tr'); // ...creamos una fila...
+    [p.name, p.price, p.stock].forEach((dato) => { // ...con tres datos: nombre, precio y stock...
+      const celda = document.createElement('td'); // ...una celda para cada dato...
+      celda.textContent = dato; // ...con textContent: un nombre con "<" no puede romper la pagina...
+      fila.appendChild(celda); // ...la celda entra en la fila.
+    }); // Fin del forEach de datos.
+    tabla.appendChild(fila); // La fila completa entra en la tabla.
+  }); // Fin del forEach de productos.
+  mostrar('Mostrando ' + lista.length + ' de ' + productos.length + ' productos.', false); // Resumen para el usuario.
 } // Fin de pintar.
 
-async function cargar() { // Paso 1: pide los productos al servidor al cargar la pagina.
-  try { // try/catch: si algo falla no se rompe la pagina.
-    productos = await Ayudas.pedir("/api/products"); // fetch + comprobacion de errores HTTP (ayuda ya hecha).
+// Paso 1: al cargar, pide /api/products y guarda la respuesta JSON en productos.
+async function cargar() { // async porque esperamos al servidor.
+  try { // Protegemos por si falla la red o el servidor.
+    const respuesta = await fetch('/api/products'); // Pedimos la lista de productos y esperamos.
+    if (!respuesta.ok) throw new Error('Error HTTP ' + respuesta.status); // Si el servidor responde con error, lo tratamos como fallo.
+    productos = await respuesta.json(); // Convertimos la respuesta de texto JSON a una lista de objetos de JavaScript.
     pintar(productos); // Pintamos la lista completa.
-  } catch (error) { // Error de red o del servidor.
-    mostrar("No se pudieron cargar los productos: " + error.message, true); // Se avisa al usuario.
+  } catch (error) { // Si algo ha fallado...
+    mostrar('No se pudieron cargar los productos: ' + error.message, true); // ...se lo decimos al usuario.
   } // Fin del try/catch.
 } // Fin de cargar.
 
 // ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
 // ---------------------------------------------------------------------------
-function ejecutarOrden(texto) { // Recibe lo que ha entendido el microfono y decide que filtro aplicar.
-  const frase = texto.toLowerCase().trim().replace(/[.,;:!?]+$/, ""); // Minusculas, sin espacios y sin punto final.
-  if (frase === "stock bajo") { // Paso 3: "stock bajo".
-    pintar(productos.filter(p => p.stock < 5)); // filter crea una lista NUEVA con los de stock menor que 5 (Teclado).
-  } else if (frase === "todos") { // Paso 4: "todos".
-    pintar(productos); // Volvemos a pintar la lista original completa.
-  } else if (frase.startsWith("buscar ")) { // Paso 5: "buscar ..." (empieza por buscar + espacio).
-    const busqueda = frase.slice(7).trim(); // slice(7) quita "buscar " (7 caracteres) y deja la palabra buscada.
-    pintar(productos.filter(p => p.name.toLowerCase().includes(busqueda))); // Nombre en minusculas que CONTENGA la busqueda.
-  } else { // Cualquier otra frase.
-    mostrar("No he entendido: \"" + frase + "\". Di stock bajo, todos o buscar ...", true); // Se muestra lo que oyo.
-  } // Fin del if.
-} // Fin de ejecutarOrden.
-
-// Ayudas.voz (ya hecha por el profesor): al pulsar el boton escucha UNA frase en espanol,
-// llama a ejecutarOrden(frase) y se encarga de los errores del microfono (permiso denegado...).
-Ayudas.voz($("hablar"), ejecutarOrden, msg);
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition; // El "oido" del navegador (con o sin prefijo webkit).
+if (!Reconocimiento) { // Si este navegador no sabe reconocer voz...
+  botonHablar.disabled = true; // ...desactivamos el boton...
+  mostrar('Tu navegador no admite voz. Usa Chrome o Edge.', true); // ...y avisamos.
+} else { // Si si sabe reconocer voz, lo preparamos todo.
+  const oido = new Reconocimiento(); // Creamos el reconocedor de voz.
+  oido.lang = 'es-ES'; // Idioma: espanol de Espana.
+  oido.onresult = (e) => { // Cuando el oido ha entendido algo...
+    const frase = e.results[0][0].transcript.toLowerCase().trim().replace(/[.,;:!?]+$/, ''); // ...cogemos la frase en minusculas, sin espacios ni punto final.
+    if (frase === 'stock bajo') { // Paso 3: "stock bajo".
+      pintar(productos.filter((p) => p.stock < 5)); // filter crea una lista NUEVA solo con los de stock menor que 5 (debe salir Teclado).
+    } else if (frase === 'todos') { // Paso 4: "todos".
+      pintar(productos); // Volvemos a pintar la lista original sin filtrar.
+    } else if (frase.startsWith('buscar ')) { // Paso 5: "buscar ..." (empieza por la palabra buscar y un espacio).
+      const busqueda = frase.slice(7).trim(); // slice(7) quita las 7 letras de "buscar " y deja solo la palabra buscada.
+      pintar(productos.filter((p) => p.name.toLowerCase().includes(busqueda))); // Nos quedamos con los productos cuyo nombre (en minusculas) CONTIENE la busqueda.
+    } else { // Cualquier otra frase.
+      mostrar('No he entendido: "' + frase + '". Di stock bajo, todos o buscar ...', true); // Enseñamos lo que oyo.
+    } // Fin del if/else if.
+  }; // Fin de onresult.
+  oido.onerror = (e) => { // Si el microfono o el reconocimiento fallan...
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') mostrar('Permiso de microfono denegado. Permitelo en el candado de la barra de direcciones.', true); // Permiso denegado.
+    else if (e.error === 'no-speech') mostrar('No he oido nada. Pulsa Hablar y prueba otra vez.', true); // Silencio.
+    else mostrar('Error de voz: ' + e.error, true); // Cualquier otro error.
+  }; // Fin de onerror.
+  oido.onend = () => { botonHablar.disabled = false; }; // Al terminar de escuchar, el boton vuelve a estar activo.
+  botonHablar.onclick = () => { // Al pulsar Hablar...
+    try { // ...protegemos start() por si ya estaba escuchando...
+      botonHablar.disabled = true; // ...bloqueamos el boton mientras escucha...
+      oido.start(); // ...y encendemos el microfono (la primera vez pide permiso).
+    } catch (error) { // Si start() falla...
+      botonHablar.disabled = false; // ...desbloqueamos el boton...
+      mostrar('No se pudo iniciar el microfono: ' + error.message, true); // ...y contamos el motivo.
+    } // Fin del try/catch.
+  }; // Fin del onclick.
+} // Fin del if/else de Reconocimiento.
 
 // ---------------------------------------------------------------------------
 // TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
-// Resultados: la tabla (pintar) y el parrafo de mensajes (mostrar).
+// Resultados: la tabla (pintar) y el parrafo de avisos (mostrar).
 // Casos controlados: servidor caido al cargar, permiso de microfono denegado,
-// navegador sin voz (lo avisa Ayudas.voz), frase no entendida y "Sin coincidencias".
+// navegador sin voz, frase no entendida y "Sin coincidencias".
 // Pruebas: "stock bajo" -> solo Teclado; "todos" -> 3 productos;
 // "buscar teclado" -> Teclado; "buscar xyz" -> Sin coincidencias.
 // ---------------------------------------------------------------------------
-cargar(); // Arranca la carga de productos.
+cargar(); // Arrancamos la carga de productos nada mas abrir la pagina.
   </script>
 </body>
 </html>

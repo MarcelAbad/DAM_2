@@ -27,117 +27,115 @@
   <script type="module">
 // ============================================================================
 // E3 - Pasar productos con movimiento
-// Idea: la camara saca fotos muchas veces por segundo. Comparamos cada foto con
-// la anterior: si muchos pixeles cambian en la mitad DERECHA -> siguiente
-// producto; si cambian en la IZQUIERDA -> producto anterior.
+// Idea general: la camara saca una foto muchas veces por segundo. Comparamos cada
+// foto con la anterior: si cambian muchos pixeles en la mitad DERECHA se pasa al
+// producto siguiente; si cambian en la IZQUIERDA, al anterior.
 // OJO (lo dice el enunciado): NO reconocemos poses, solo diferencias de imagen,
 // asi que un cambio de luz tambien puede activar la accion.
+// Esta hecho igual que el resuelto R3 (movimiento con diferencia de fotogramas).
 // ============================================================================
-
-const $ = id => document.getElementById(id); // Atajo: busca un elemento por su id.
 
 // ---------------------------------------------------------------------------
 // TODO 1: Preparar datos o componente. (HECHO)
 // ---------------------------------------------------------------------------
-await import("/componentes/erp-tarjeta.js"); // Carga el componente: registra la etiqueta <erp-tarjeta>.
-const msg = $("msg"); // Parrafo de avisos.
-const tarjeta = $("tarjeta"); // Tarjeta (componente) que muestra el producto actual.
-const lienzo = $("lienzo"); // Canvas de 160x120 donde copiamos cada fotograma.
-const ctx = lienzo.getContext("2d", { willReadFrequently: true }); // "Pincel" del canvas (willReadFrequently: vamos a leer pixeles a menudo).
-const video = document.createElement("video"); // Video invisible que recibe la camara.
-video.muted = true; // Sin sonido (necesario para que el navegador deje reproducirlo solo).
-video.playsInline = true; // En movil no lo abre a pantalla completa.
-$("hablar").hidden = true; // Este ejercicio no usa voz: escondemos el boton sobrante.
+await import('/componentes/erp-tarjeta.js'); // Paso 2: carga el componente; esto registra la etiqueta <erp-tarjeta> en el navegador.
+const msg = document.getElementById('msg'); // Busca el parrafo #msg: ahi escribimos avisos y errores.
+const tarjeta = document.getElementById('tarjeta'); // Busca la tarjeta (componente) que ensena el producto actual.
+const lienzo = document.getElementById('lienzo'); // Busca el canvas de 160x120 donde copiaremos cada fotograma.
+const ctx = lienzo.getContext('2d', { willReadFrequently: true }); // "Pincel" del canvas; willReadFrequently avisa de que leeremos pixeles muchas veces.
+const video = document.createElement('video'); // Video invisible (no esta en la pagina) que recibe la camara.
+video.muted = true; // Sin sonido: el navegador solo deja reproducir solo los videos silenciosos.
+video.playsInline = true; // En el movil no se abre a pantalla completa.
+document.getElementById('hablar').hidden = true; // Este ejercicio no usa voz: escondemos el boton que sobra.
 
-const ANCHO = 160, ALTO = 120; // Tamano del canvas (pequeno = analisis rapido).
-const DIFERENCIA = 90; // Un pixel "ha cambiado" si su brillo varia mas de 90.
-const UMBRAL = 600; // Minimo de pixeles cambiados en un lado para contar como movimiento.
-const BLOQUEO_MS = 1000; // Tras un cambio, 1 segundo sin aceptar otro.
+let productos = []; // Lista de productos que vendra del servidor.
+let actual = 0; // Posicion del producto que se ve ahora (0 = el primero).
+let anterior = null; // La foto anterior, para compararla con la actual; al principio no hay ninguna.
+let bloqueo = 0; // Hora hasta la que NO aceptamos otro cambio (para no pasar 20 productos de golpe).
 
-let productos = []; // Lista de productos del servidor.
-let actual = 0; // Posicion del producto que se ve ahora.
-let anterior = null; // Foto anterior (para comparar con la actual).
-let bloqueadoHasta = 0; // Hora (performance.now) hasta la que no aceptamos cambios.
-
-function mostrar(texto, esError = false) { // Escribe un mensaje (verde = bien, rojo = error).
+// Escribe un aviso en pantalla (verde = bien, rojo = error).
+function aviso(texto, esError) { // Recibe el texto y si es un error.
   msg.textContent = texto; // textContent: nunca se interpreta como HTML.
-  msg.style.color = esError ? "crimson" : "green"; // Rojo si es error.
-} // Fin de mostrar.
+  msg.style.color = esError ? 'crimson' : 'green'; // Rojo si es error, verde si no.
+} // Fin de aviso.
 
-// Paso 2: mostrarProducto() pone el producto actual en la tarjeta.
-function mostrarProducto() { // Actualiza la tarjeta.
-  const p = productos[actual]; // Producto actual.
+// Paso 2: mostrar() asigna titulo = nombre y valor = stock del producto actual.
+function mostrar() { // No recibe nada: usa "productos" y "actual".
+  const p = productos[actual]; // Cogemos el producto que toca ensenar.
   tarjeta.titulo = p.name; // titulo = nombre del producto (usa el "set titulo" del componente).
-  tarjeta.valor = p.stock; // valor = stock del producto.
-} // Fin de mostrarProducto.
+  tarjeta.valor = p.stock; // valor = stock del producto (usa el "set valor" del componente).
+} // Fin de mostrar.
 
 // ---------------------------------------------------------------------------
 // TODO 2: Programar las acciones y eventos descritos arriba. (HECHO)
 // ---------------------------------------------------------------------------
-function bucle() { // Se repite ~60 veces por segundo (una vuelta = una foto).
-  ctx.save(); // Guardamos el estado del pincel.
-  ctx.translate(ANCHO, 0); // Movemos el origen a la derecha...
-  ctx.scale(-1, 1); // ...y volteamos: efecto espejo (izquierda del usuario = izquierda de la pantalla).
-  ctx.drawImage(video, 0, 0, ANCHO, ALTO); // Copiamos el fotograma actual al canvas.
-  ctx.restore(); // Quitamos el espejo del pincel.
-  const foto = ctx.getImageData(0, 0, ANCHO, ALTO).data; // Lista de numeros R,G,B,A de cada pixel.
-
+// bucle() se repite unas 60 veces por segundo: cada vuelta analiza UNA foto.
+function bucle() { // Funcion que se llama a si misma al final con requestAnimationFrame.
+  ctx.save(); // Guardamos el estado del pincel para poder deshacer el espejo luego.
+  ctx.translate(160, 0); // Movemos el origen del dibujo a la derecha del canvas...
+  ctx.scale(-1, 1); // ...y volteamos en horizontal: efecto espejo (tu izquierda es la izquierda de la pantalla).
+  ctx.drawImage(video, 0, 0, 160, 120); // Copiamos el fotograma actual de la camara al canvas (160 de ancho x 120 de alto).
+  ctx.restore(); // Quitamos el espejo del pincel (dejamos el pincel como estaba).
+  const foto = ctx.getImageData(0, 0, 160, 120).data; // Lista de numeros R,G,B,A de cada pixel de la foto actual.
   if (anterior) { // Solo si ya tenemos una foto anterior con la que comparar.
-    let izq = 0, der = 0; // Contadores de pixeles cambiados a cada lado.
-    for (let i = 0; i < foto.length; i += 4) { // Paso 3: avanzamos de 4 en 4 (cada pixel son 4 numeros: R,G,B,A).
-      const brillo = foto[i] + foto[i + 1] + foto[i + 2]; // Brillo actual = R+G+B.
-      const brilloAntes = anterior[i] + anterior[i + 1] + anterior[i + 2]; // Brillo de la foto anterior.
-      if (Math.abs(brillo - brilloAntes) > DIFERENCIA) { // Paso 4: ¿ha cambiado mas de 90?
-        const columna = (i / 4) % ANCHO; // Columna del pixel (i/4 = numero de pixel; % 160 = posicion en su fila).
-        if (columna < ANCHO / 2) izq++; else der++; // Menos de 80 = izquierda; si no, derecha.
+    let izq = 0; // Contador de pixeles que han cambiado en la mitad izquierda.
+    let der = 0; // Contador de pixeles que han cambiado en la mitad derecha.
+    for (let i = 0; i < foto.length; i += 4) { // Paso 3: recorremos la lista de 4 en 4, porque cada pixel son 4 numeros (R,G,B,A).
+      const brillo = foto[i] + foto[i + 1] + foto[i + 2]; // Brillo del pixel ahora = R + G + B.
+      const brilloAntes = anterior[i] + anterior[i + 1] + anterior[i + 2]; // Brillo del mismo pixel en la foto anterior.
+      if (Math.abs(brillo - brilloAntes) > 90) { // Paso 4: si la diferencia (sin signo) es mayor de 90, el pixel ha cambiado.
+        const x = (i / 4) % 160; // i/4 = numero de pixel; % 160 = columna dentro de su fila.
+        if (x < 80) izq++; else der++; // Columna menor de 80 = izquierda; si no, derecha.
       } // Fin del if de cambio.
     } // Fin del for.
-
-    if ((izq > UMBRAL || der > UMBRAL) && performance.now() > bloqueadoHasta) { // Paso 5: movimiento suficiente y bloqueo terminado.
-      const n = productos.length; // Cantidad de productos.
-      if (der > izq) actual = (actual + 1) % n; // Derecha: avanza (el % vuelve al principio tras el ultimo).
-      else actual = (actual - 1 + n) % n; // Izquierda: retrocede (el + n evita numeros negativos).
-      mostrarProducto(); // Paso 6: actualiza la tarjeta...
-      bloqueadoHasta = performance.now() + BLOQUEO_MS; // ...y bloquea 1000 ms para no cambiar 20 veces seguidas.
+    const umbral = 600; // Paso 5: minimo de pixeles cambiados para contar como movimiento. Se ajusta si la camara es muy sensible.
+    if (performance.now() > bloqueo && (izq > umbral || der > umbral)) { // Hay movimiento y ya ha terminado el bloqueo.
+      if (der > izq) actual = (actual + 1) % productos.length; // Derecha: avanza; el % vuelve al primero despues del ultimo.
+      else actual = (actual + productos.length - 1) % productos.length; // Izquierda: retrocede; el + length evita numeros negativos.
+      mostrar(); // Paso 6: actualizamos la tarjeta con el nuevo producto.
+      bloqueo = performance.now() + 1000; // Paso 6: bloqueamos nuevos cambios durante 1000 ms (1 segundo).
     } // Fin del if de movimiento.
   } // Fin del if (anterior).
-  anterior = foto.slice(); // Paso 6: guardamos una COPIA (slice) para la siguiente vuelta; sin copia, "foto" se sobrescribe.
-  requestAnimationFrame(bucle); // Pedimos al navegador repetir esta funcion en el siguiente fotograma.
+  anterior = foto.slice(); // Paso 6: guardamos una COPIA de la foto (slice) para la siguiente vuelta; sin copia, se sobrescribiria.
+  requestAnimationFrame(bucle); // Pedimos al navegador que repita esta funcion en el siguiente fotograma.
 } // Fin de bucle.
 
-async function iniciar() { // Se ejecuta al pulsar "Activar camara".
-  $("iniciar").disabled = true; // Evita pulsar dos veces y arrancar dos bucles a la vez.
+// Se ejecuta al pulsar "Activar camara".
+async function iniciar() { // async porque esperamos al servidor y a la camara.
+  document.getElementById('iniciar').disabled = true; // Desactivamos el boton: asi no se arrancan dos bucles a la vez.
   try { // Puede fallar: servidor caido, camara denegada...
-    productos = await Ayudas.pedir("/api/products"); // Paso 2: carga los productos (lanza error si el servidor falla).
-    if (productos.length === 0) { // Lista vacia: no hay nada que mostrar.
-      mostrar("No hay productos que mostrar.", true); // Se avisa...
-      $("iniciar").disabled = false; // ...y se permite reintentar.
-      return; // No arrancamos la camara.
-    } // Fin del if.
-    mostrarProducto(); // Mostramos el primer producto.
-    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Pide permiso de camara.
-    video.srcObject = flujo; // Conectamos la camara al video.
-    await video.play(); // Encendemos el video.
-    window.addEventListener("pagehide", () => flujo.getTracks().forEach(t => t.stop()), { once: true }); // Libera la camara al salir de la pagina.
-    mostrar("Camara activa. Mueve el brazo a la izquierda o a la derecha."); // Instruccion.
+    const respuesta = await fetch('/api/products'); // Paso 2: pedimos los productos al servidor.
+    if (!respuesta.ok) throw new Error('Error HTTP ' + respuesta.status); // Si el servidor responde mal, lo tratamos como fallo.
+    productos = await respuesta.json(); // Convertimos la respuesta JSON en una lista de objetos.
+    if (productos.length === 0) { // Si la lista esta vacia no hay nada que ensenar...
+      aviso('No hay productos que mostrar.', true); // ...avisamos...
+      document.getElementById('iniciar').disabled = false; // ...permitimos reintentar...
+      return; // ...y no encendemos la camara (asi nunca se lee productos[0] de una lista vacia).
+    } // Fin del if de lista vacia.
+    mostrar(); // Ensenamos el primer producto.
+    const flujo = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 4 / 3 }, audio: false }); // Pedimos permiso y abrimos la camara (sin audio).
+    video.srcObject = flujo; // Conectamos la camara al video invisible.
+    await video.play(); // Encendemos el video y esperamos a que empiece.
+    window.addEventListener('pagehide', () => flujo.getTracks().forEach((t) => t.stop()), { once: true }); // Al salir de la pagina apagamos la camara.
+    aviso('Camara activa. Mueve el brazo a la izquierda o a la derecha.', false); // Explicamos que hacer.
     bucle(); // Empezamos a analizar fotogramas.
-  } catch (error) { // Cualquier fallo de arriba.
-    $("iniciar").disabled = false; // Permitimos reintentar.
-    if (error.name === "NotAllowedError") mostrar("Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.", true); // Caso: permiso denegado.
-    else if (error.name === "NotFoundError") mostrar("No se ha encontrado ninguna camara.", true); // Caso: sin camara.
-    else mostrar("Error: " + error.message, true); // Cualquier otro caso.
+  } catch (error) { // Cualquier fallo de arriba cae aqui.
+    document.getElementById('iniciar').disabled = false; // Permitimos reintentar.
+    if (error.name === 'NotAllowedError') aviso('Permiso de camara denegado. Permitelo en el candado de la barra de direcciones.', true); // Permiso denegado.
+    else if (error.name === 'NotFoundError') aviso('No se ha encontrado ninguna camara.', true); // No hay camara.
+    else aviso('Error: ' + error.message, true); // Cualquier otro fallo.
   } // Fin del try/catch.
 } // Fin de iniciar.
 
-$("iniciar").addEventListener("click", iniciar); // Al pulsar el boton se activa la camara.
+document.getElementById('iniciar').addEventListener('click', iniciar); // Al pulsar el boton se activa la camara.
 
 // ---------------------------------------------------------------------------
 // TODO 3: Mostrar resultados y errores; probar todos los casos. (HECHO)
-// Resultado: la tarjeta cambia de producto (nombre y stock) y mostrar() avisa.
+// Resultado: la tarjeta cambia de producto (nombre y stock) y aviso() informa.
 // Casos controlados: permiso de camara denegado, sin camara, servidor caido,
-// lista de productos vacia (no se accede a productos[0]) y pulsar dos veces.
+// lista de productos vacia y pulsar el boton dos veces.
 // Prueba: buena luz y fondo quieto; mover el brazo a cada lado. Si es demasiado
-// sensible (o poco), se cambia la constante UMBRAL (600).
+// sensible (o poco), se cambia el valor de "umbral" (600).
 // ---------------------------------------------------------------------------
   </script>
 </body>
